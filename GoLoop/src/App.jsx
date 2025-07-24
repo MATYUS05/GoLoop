@@ -9,6 +9,8 @@ import AdminDashboard from "./components/layout/AdminDashboard";
 import Events from "./pages/user/Events";
 import CreateEventPage from "./pages/user/CreateEventPage";
 import MyEventsPage from "./pages/user/MyEventsPage";
+import EventDetailPage from "./pages/user/EventDetailPage";
+import ManageParticipantsPage from "./pages/user/ManageParticipantsPage";
 import Profile from "./pages/user/Profile";
 import Admin from "./pages/admin/Admin";
 
@@ -26,6 +28,8 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/create-event" element={<CreateEventPage />} />
           <Route path="/my-event" element={<MyEventsPage />} />
+          <Route path="/event/:eventId" element={<EventDetailPage />} />
+           <Route path="/my-event/participants/:eventId" element={<ManageParticipantsPage />} />
           <Route path="/dashboard" element={<Events />} />
         </Route>
 
