@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { auth, db } from "../../firebase/firebase";
+import { FcGoogle } from "react-icons/fc";
+
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -117,9 +119,10 @@ function LoginPage() {
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full flex items-center justify-center px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition disabled:bg-gray-100"
+          className="w-full flex items-center justify-center gap-3 px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition disabled:bg-gray-100"
         >
-          Login dengan Google
+          <FcGoogle size={20} />
+          Daftar dengan Google
         </button>
 
         {error && <p className="text-sm text-center text-red-500">{error}</p>}

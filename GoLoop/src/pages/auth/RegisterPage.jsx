@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FcGoogle } from "react-icons/fc";
+
+
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
@@ -140,8 +143,9 @@ function RegisterPage() {
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full flex items-center justify-center px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition disabled:bg-gray-100"
+          className="w-full flex items-center justify-center gap-3 px-4 py-2 font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition disabled:bg-gray-100"
         >
+          <FcGoogle size={20} />
           Daftar dengan Google
         </button>
 
