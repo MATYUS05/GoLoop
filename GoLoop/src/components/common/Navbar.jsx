@@ -5,8 +5,7 @@ import { Link } from "react-router-dom";
 function Navbar() {
   return (
     <nav className="flex justify-between items-center px-6 h-16 bg-white shadow">
-      <img src="#" alt="Logo GoLoop" className="h-10 w-auto" />
-
+      <h1 className="text-xl font-bold text-[#3E532D]">GoLoop</h1>
       <ul className="flex space-x-6 text-sm font-semibold">
         <li>
           <ScrollLink
@@ -42,7 +41,7 @@ function Navbar() {
 
       <Link
         to="/login"
-        className="bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded-full transition"
+        className="bg-[#3E532D] hover:bg-green-800 text-white font-bold py-2 px-4 rounded-full transition"
       >
         Login
       </Link>
