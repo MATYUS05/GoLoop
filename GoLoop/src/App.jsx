@@ -9,6 +9,9 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import Dashboard from "./components/layout/Dashboard";
 import AdminDashboard from "./components/layout/AdminDashboard";
 import Events from "./pages/user/Events";
+import CreateEventPage from "./pages/user/CreateEventPage";
+import MyEventsPage from "./pages/user/MyEventsPage";
+import Profile from "./pages/user/Profile";
 import Admin from "./pages/admin/Admin";
 
 function App() {
@@ -21,6 +24,9 @@ function App() {
           <Route path="/about" element={<About />} />
         </Route>
         <Route element={<Dashboard />}>
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/create-event" element={<CreateEventPage />} />
+          <Route path="/my-event" element={<MyEventsPage />} />
           <Route path="/dashboard" element={<Events />} />
         </Route>
         <Route element={<AdminDashboard />}>

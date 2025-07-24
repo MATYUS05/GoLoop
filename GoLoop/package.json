@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cloudinary/react": "^1.14.3",
+    "@cloudinary/url-gen": "^1.21.0",
     "@tailwindcss/vite": "^4.1.11",
     "firebase": "^12.0.0",
     "react": "^19.1.0",
