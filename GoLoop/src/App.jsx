@@ -9,7 +9,9 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import Dashboard from "./components/layout/Dashboard";
 import AdminDashboard from "./components/layout/AdminDashboard";
 import Events from "./pages/user/Events";
+import KenaliSampah from "./pages/user/kenalisampah";
 import Admin from "./pages/admin/Admin";
+
 
 function App() {
   return (
@@ -22,6 +24,7 @@ function App() {
         </Route>
         <Route element={<Dashboard />}>
           <Route path="/dashboard" element={<Events />} />
+          <Route path="/kenalisampah" element={<KenaliSampah />} />
         </Route>
         <Route element={<AdminDashboard />}>
           <Route path="/admindashboard" element={<Admin />} />
