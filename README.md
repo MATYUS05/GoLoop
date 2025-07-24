@@ -1,7 +1,5 @@
 # GoLoop
 
-Repositori ini berisi kode untuk proyek [tulis deskripsi singkat di sini].
-
 ## 💻 Teknologi
 
 Proyek ini dibuat dengan beberapa paket utama:
@@ -17,7 +15,7 @@ Proyek ini dibuat dengan beberapa paket utama:
 
 1.  **Clone repository ini**
     ```bash
-    git clone <url-repository-anda>
+    git clone https://github.com/MATYUS05/GoLoop.git
     cd <nama-proyek>
     ```
 
