@@ -1,73 +1,56 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { auth, db } from '../../firebase/firebase';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc, Timestamp } from 'firebase/firestore';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { auth, db } from "../../firebase/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
 
-function SignUpPage() {
+function RegisterPage() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    displayName: '',
-    email: '',
-    password: '',
-  });
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({ displayName: '', email: '', password: '' });
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSignUp = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (!formData.displayName || !formData.email || !formData.password) {
-      return setError('Semua field wajib diisi.');
+      return setError("Semua field wajib diisi.");
     }
     if (formData.password.length < 6) {
-      return setError('Password minimal harus 6 karakter.');
+      return setError("Password minimal harus 6 karakter.");
     }
 
     setLoading(true);
-    setError('');
-
+    setError("");
     try {
-      // Langkah 1: Buat user di Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
+      // Buat user di Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
 
-      // Langkah 2: Update profil di Firebase Authentication (untuk nama)
-      await updateProfile(user, {
-        displayName: formData.displayName,
-      });
+      // Update nama di profil Authentication
+      await updateProfile(user, { displayName: formData.displayName });
 
-      // Langkah 3: Buat dokumen untuk user di koleksi 'users' Firestore
-      // Ini adalah langkah kunci yang menyelesaikan masalah Anda
-      await setDoc(doc(db, 'users', user.uid), {
+      // Buat dokumen user di Firestore
+      await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         displayName: formData.displayName,
         email: formData.email,
-        location: '', // Nilai awal untuk field tambahan
-        role: 'user', // Peran default untuk pengguna baru
+        location: '',
+        role: 'user',
         createdAt: Timestamp.now(),
       });
-
-      // Arahkan ke halaman utama setelah berhasil mendaftar
-      navigate('/');
+      
+      // Arahkan ke halaman utama setelah berhasil
+      navigate("/events");
 
     } catch (err) {
-      console.error("Gagal mendaftar:", err);
-      // Terjemahkan pesan error Firebase agar lebih mudah dimengerti
       if (err.code === 'auth/email-already-in-use') {
-        setError('Email ini sudah terdaftar. Silakan gunakan email lain.');
+        setError('Email ini sudah terdaftar.');
       } else {
-        setError('Gagal mendaftar. Silakan coba lagi.');
+        setError("Gagal mendaftar. Silakan coba lagi.");
       }
     } finally {
       setLoading(false);
@@ -75,72 +58,63 @@ function SignUpPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center">Buat Akun Baru</h2>
-        
-        <form onSubmit={handleSignUp} className="space-y-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+      <h2 className="text-2xl font-bold py-6 text-center" style={{ color: "#3E532D" }}>
+        Buat Akun Baru
+      </h2>
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-md border border-gray-200">
+        <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
-              Nama Lengkap
-            </label>
+            <label className="text-md font-bold" style={{ color: "#3E532D" }}>Nama Lengkap</label>
             <input
               type="text"
               name="displayName"
-              id="displayName"
+              placeholder="Nama Anda"
               onChange={handleChange}
-              className="w-full px-3 py-2 mt-1 border rounded-md"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3E532D]"
               required
             />
           </div>
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Alamat Email
-            </label>
+            <label className="text-md font-bold" style={{ color: "#3E532D" }}>Email</label>
             <input
               type="email"
               name="email"
-              id="email"
+              placeholder="Email"
               onChange={handleChange}
-              className="w-full px-3 py-2 mt-1 border rounded-md"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3E532D]"
               required
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
+            <label className="text-md font-bold" style={{ color: "#3E532D" }}>Password</label>
             <input
               type="password"
               name="password"
-              id="password"
+              placeholder="Minimal 6 karakter"
               onChange={handleChange}
-              className="w-full px-3 py-2 mt-1 border rounded-md"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3E532D]"
               required
             />
           </div>
-          
-          {error && <p className="text-sm text-center text-red-600">{error}</p>}
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full px-4 py-2 font-semibold text-white bg-green-700 rounded-md hover:bg-green-800 disabled:bg-green-400"
-            >
-              {loading ? 'Mendaftarkan...' : 'Daftar'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full px-4 py-2 font-semibold text-white rounded-xl bg-[#3E532D] hover:bg-[#334726] transition disabled:bg-gray-400"
+          >
+            {loading ? "Mendaftar..." : "Daftar"}
+          </button>
         </form>
-        <p className="text-sm text-center text-gray-600">
-          Sudah punya akun?{' '}
-          <Link to="/login" className="font-medium text-green-700 hover:underline">
+        {error && <p className="text-sm text-center text-red-500">{error}</p>}
+        <div className="text-sm text-center text-gray-600">
+          Sudah punya akun?{" "}
+          <Link to="/login" className="font-semibold text-[#3E532D] hover:underline">
             Login di sini
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );
 }
 
-export default SignUpPage;
+export default RegisterPage;
