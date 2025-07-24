@@ -59,24 +59,13 @@ function RegisterPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-      <button
-        onClick={() => navigate("/")}
-        className="absolute top-6 left-6 text-[#3E532D] hover:underline font-medium"
-      >
-        ←
-      </button>
-      <h2
-        className="text-2xl font-bold py-6 text-center"
-        style={{ color: "#3E532D" }}
-      >
+      <h2 className="text-2xl font-bold py-6 text-center" style={{ color: "#3E532D" }}>
         Buat Akun Baru
       </h2>
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-md border border-gray-200">
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="text-md font-bold" style={{ color: "#3E532D" }}>
-              Nama Lengkap
-            </label>
+            <label className="text-md font-bold" style={{ color: "#3E532D" }}>Nama Lengkap</label>
             <input
               type="text"
               name="displayName"
@@ -87,9 +76,7 @@ function RegisterPage() {
             />
           </div>
           <div>
-            <label className="text-md font-bold" style={{ color: "#3E532D" }}>
-              Email
-            </label>
+            <label className="text-md font-bold" style={{ color: "#3E532D" }}>Email</label>
             <input
               type="email"
               name="email"
@@ -100,9 +87,7 @@ function RegisterPage() {
             />
           </div>
           <div>
-            <label className="text-md font-bold" style={{ color: "#3E532D" }}>
-              Password
-            </label>
+            <label className="text-md font-bold" style={{ color: "#3E532D" }}>Password</label>
             <input
               type="password"
               name="password"
@@ -123,10 +108,7 @@ function RegisterPage() {
         {error && <p className="text-sm text-center text-red-500">{error}</p>}
         <div className="text-sm text-center text-gray-600">
           Sudah punya akun?{" "}
-          <Link
-            to="/login"
-            className="font-semibold text-[#3E532D] hover:underline"
-          >
+          <Link to="/login" className="font-semibold text-[#3E532D] hover:underline">
             Login di sini
           </Link>
         </div>
