@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 function Navbar() {
   return (
-    <nav className="flex justify-between items-center">
+    <nav className="flex justify-between h-16 items-center">
       <img 
         src="#"
         alt="Logo Perusahaan" 
