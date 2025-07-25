@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Link as ScrollLink } from "react-scroll";
+import { Link } from "react-router-dom";  
 import gambar1 from "../../assets/img/bg-home.png";
 
 function Home() {
@@ -30,11 +31,10 @@ function Home() {
               membangun ekosistem daur ulang yang kolaboratif dan transparan
               untuk mengurangi dampak sampah terhadap lingkungan.
             </p>
-            <ScrollLink to="wilayah" smooth={true} duration={500}>
-              <button className="bg-white text-green-900 font-semibold px-6 py-3 rounded-full shadow hover:bg-gray-200 transition">
+              <Link to="/login" className="bg-white text-green-900 font-semibold px-6 py-3 rounded-full shadow hover:bg-gray-200 transition">
                 Ikut berkontribusi
-              </button>
-            </ScrollLink>
+              </Link>
+          
           </div>
         </div>
       </div>

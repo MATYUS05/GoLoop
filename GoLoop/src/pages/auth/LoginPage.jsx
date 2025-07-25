@@ -79,12 +79,23 @@ function LoginPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-      <h2 className="text-2xl font-bold py-6 text-center" style={{ color: "#3E532D" }}>
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-6 left-6 text-[#3E532D] hover:underline font-medium"
+      >
+        ←
+      </button>
+      <h2
+        className="text-2xl font-bold py-6 text-center"
+        style={{ color: "#3E532D" }}
+      >
         Login ke akunmu
       </h2>
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-md border border-gray-200">
         <form onSubmit={handleEmailLogin} className="space-y-4">
-          <label className="text-md font-bold" style={{ color: "#3E532D" }}>Email</label>
+          <label className="text-md font-bold" style={{ color: "#3E532D" }}>
+            Email
+          </label>
           <input
             type="email"
             placeholder="Email"
@@ -93,7 +104,9 @@ function LoginPage() {
             className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3E532D]"
             required
           />
-          <label className="text-md font-bold" style={{ color: "#3E532D" }}>Password</label>
+          <label className="text-md font-bold" style={{ color: "#3E532D" }}>
+            Password
+          </label>
           <input
             type="password"
             placeholder="Kata sandi"
@@ -126,7 +139,10 @@ function LoginPage() {
         {error && <p className="text-sm text-center text-red-500">{error}</p>}
         <div className="text-sm text-center text-gray-600">
           Belum punya akun?{" "}
-          <Link to="/register" className="font-semibold text-[#3E532D] hover:underline">
+          <Link
+            to="/register"
+            className="font-semibold text-[#3E532D] hover:underline"
+          >
             Daftar di sini
           </Link>
         </div>
