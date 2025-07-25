@@ -15,6 +15,7 @@ import Leaderboard from "./pages/user/Leaderboard";
 import Profile from "./pages/user/Profile";
 import Admin from "./pages/admin/Admin";
 import Home1 from "./pages/user/Home1";
+import KenaliSampah from "./pages/user/KenaliSampah"
 
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
             element={<Leaderboard />}
           />
           <Route path="/dashboard" element={<Events />} />
+          <Route path="/kenali-sampah" element={<KenaliSampah />} />
         </Route>
 
         {/* Admin Dashboard */}

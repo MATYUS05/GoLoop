@@ -132,7 +132,6 @@ function NavbarDashboard() {
             >
               Profil
             </Link>
-            
             <button
               onClick={handleLogout}
               className="w-full text-left block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
