@@ -1,5 +1,3 @@
-// src/pages/Admin/AdminEventCompletionReviewPage.js
-
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase/firebase';
 import { collection, query, where, onSnapshot, doc, updateDoc, deleteField } from 'firebase/firestore';

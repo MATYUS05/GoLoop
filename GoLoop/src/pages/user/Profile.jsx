@@ -9,7 +9,13 @@ import {
   reauthenticateWithCredential,
 } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { FaTrophy } from "react-icons/fa"; // Impor ikon trofi
+import Footer from "../../components/common/Footer";
+import { FaTrophy } from "react-icons/fa";
+
+const TABS = {
+  PROFILE: "Profil",
+  PASSWORD: "Ubah Password",
+};
 
 const CITIES = [
   "Jakarta",
@@ -26,28 +32,29 @@ const CITIES = [
 function ProfilePage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [selectedTab, setSelectedTab] = useState(TABS.PROFILE);
   const [profileData, setProfileData] = useState({
     displayName: "",
-    location: "",
+    location: CITIES[0],
   });
-  const [points, setPoints] = useState(0); // <-- 1. State baru untuk poin
-  const [newPassword, setNewPassword] = useState("");
+  const [points, setPoints] = useState(0);
   const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        const userDocRef = doc(db, "users", currentUser.uid);
-        const userDoc = await getDoc(userDocRef);
+
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (userDoc.exists()) {
           const data = userDoc.data();
           setProfileData({
@@ -55,7 +62,12 @@ function ProfilePage() {
             location: data.location || CITIES[0],
           });
           setImagePreview(currentUser.photoURL || "");
-          setPoints(data.points || 0); // <-- 2. Ambil data poin dari Firestore
+          setPoints(data.points || 0);
+        } else {
+          setProfileData({
+            displayName: currentUser.displayName || "",
+            location: CITIES[0],
+          });
         }
       } else {
         navigate("/login");
@@ -65,27 +77,26 @@ function ProfilePage() {
     return () => unsubscribe();
   }, [navigate]);
 
-  // ... (Semua fungsi handler Anda tetap sama) ...
-  const handleInputChange = (e) => {
-    setProfileData((prevState) => ({
-      ...prevState,
-      [e.target.name]: e.target.value,
-    }));
+  const showSuccessMessage = (message) => {
+    setSuccess(message);
+    setTimeout(() => setSuccess(""), 3000);
   };
+
+  const handleInputChange = (e) => {
+    setProfileData({
+      ...profileData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
       setProfileImage(e.target.files[0]);
       setImagePreview(URL.createObjectURL(e.target.files[0]));
     }
   };
-  const showSuccessMessage = (message) => {
-    setSuccess(message);
-    setTimeout(() => setSuccess(""), 3000);
-  };
 
-  // Fungsi untuk simpan perubahan nama & lokasi
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
+  const handleProfileSave = async () => {
     if (!user) return;
     setError("");
     setIsSavingProfile(true);
@@ -97,7 +108,7 @@ function ProfilePage() {
         displayName: profileData.displayName,
         location: profileData.location,
       });
-      showSuccessMessage("Informasi profil berhasil diperbarui!");
+      showSuccessMessage("Profil berhasil diperbarui!");
     } catch (err) {
       setError("Gagal memperbarui profil.");
     } finally {
@@ -105,14 +116,11 @@ function ProfilePage() {
     }
   };
 
-  // Fungsi untuk upload foto ke Cloudinary
   const handlePictureUpload = async () => {
     if (!user || !profileImage) return;
     setError("");
     setIsUploading(true);
 
-    // ... Logika upload ke Cloudinary Anda ...
-    // (Contoh disederhanakan)
     const formData = new FormData();
     formData.append("file", profileImage);
     formData.append(
@@ -130,7 +138,7 @@ function ProfilePage() {
         const photoURL = data.secure_url;
         await updateProfile(user, { photoURL });
         await updateDoc(doc(db, "users", user.uid), { photoURL });
-        setUser((prev) => ({ ...prev, photoURL }));
+        setImagePreview(photoURL);
         showSuccessMessage("Foto profil berhasil diubah!");
       } else {
         throw new Error("Upload gagal");
@@ -139,226 +147,263 @@ function ProfilePage() {
       setError("Gagal mengupload gambar.");
     } finally {
       setIsUploading(false);
+      setProfileImage(null);
     }
   };
 
-  // Fungsi untuk ubah password
-  const handlePasswordChange = async (e) => {
-    e.preventDefault();
+  const handlePasswordSave = async () => {
     if (!user || !currentPassword || !newPassword) return;
-    if (newPassword.length < 6)
-      return setError("Password baru minimal 6 karakter.");
+    if (newPassword.length < 6) {
+      setError("Password baru minimal 6 karakter.");
+      return;
+    }
 
     setError("");
     setIsChangingPassword(true);
 
-    const credential = EmailAuthProvider.credential(
-      user.email,
-      currentPassword
-    );
     try {
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword
+      );
       await reauthenticateWithCredential(user, credential);
       await updatePassword(user, newPassword);
       showSuccessMessage("Password berhasil diubah!");
       setCurrentPassword("");
       setNewPassword("");
     } catch (err) {
-      setError("Gagal mengubah password. Pastikan password saat ini benar.");
+      setError("Gagal mengganti password.");
     } finally {
       setIsChangingPassword(false);
     }
   };
 
-  if (loading) return <div className="text-center p-10">Loading...</div>;
+  if (loading) return <div className="text-center py-20">Loading...</div>;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="container mx-auto p-4 md:p-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">
-          Pengaturan Profil
-        </h1>
-
-        {/* Notifikasi Sukses & Error */}
-        {success && (
-          <div className="mb-6 p-3 bg-green-100 text-green-800 rounded-lg">
-            {success}
-          </div>
-        )}
-        {error && (
-          <div className="mb-6 p-3 bg-red-100 text-red-800 rounded-lg">
-            {error}
-          </div>
-        )}
-
-        {/* --- Tata Letak Grid Utama --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* --- Kolom Kiri: Foto Profil --- */}
-          <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-xl shadow-md text-center">
-              <h2 className="text-xl font-semibold text-gray-700 mb-4">
-                Foto Profil
-              </h2>
+    <div className="min-h-screen flex flex-col bg-white">
+      <div className="p-12 flex-1 flex items-center justify-center">
+        <div className="bg-white w-full max-w-4xl rounded-2xl shadow-lg flex flex-col md:flex-row overflow-hidden">
+          {/* Sidebar */}
+          <div className="w-full md:w-1/3 bg-[#2C441E] p-6 border-r">
+            <div className="flex flex-col items-center mb-6">
               <img
                 src={
                   imagePreview ||
                   `https://ui-avatars.com/api/?name=${
-                    profileData.displayName || "A"
-                  }&background=random&color=fff&size=128`
+                    profileData.displayName || "User"
+                  }`
                 }
                 alt="Profile"
-                className="w-32 h-32 rounded-full mb-4 object-cover mx-auto border-4 border-gray-200"
+                className="w-24 h-24 rounded-full object-cover border-4 border-white mb-4"
               />
-              <p className="text-sm text-gray-500 mb-4">
-                Pilih file gambar baru untuk diunggah.
-              </p>
-              <input
-                id="file-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <label
-                htmlFor="file-upload"
-                className="cursor-pointer bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 text-sm font-medium"
-              >
-                Pilih Gambar
-              </label>
-              {profileImage && (
-                <button
-                  onClick={handlePictureUpload}
-                  disabled={isUploading}
-                  className="mt-4 w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-green-300"
-                >
-                  {isUploading ? "Mengunggah..." : "Upload Foto"}
-                </button>
-              )}
-
-              <div className="mt-6 pt-4 border-t">
-                <div className="flex items-center justify-center gap-2 text-yellow-500">
-                  <FaTrophy size={20} />
-                  <span className="text-lg font-bold text-gray-700">
-                    Poin Saya
-                  </span>
+              <div className="text-white text-center mb-6">
+                <div className="font-bold text-xl truncate max-w-full">
+                  {profileData.displayName || "(Belum Ada Nama)"}
                 </div>
-                <p className="text-3xl font-bold text-gray-800 mt-2">
-                  {points}
-                </p>
+                <div className="flex items-center justify-center mt-2 text-yellow-500">
+                  <FaTrophy className="mr-1" />
+                  <span className="text-white">{points} Poin</span>
+                </div>
               </div>
             </div>
+
+            <nav className="space-y-4 text-sm">
+              <button
+                onClick={() => setSelectedTab(TABS.PROFILE)}
+                className={`block w-full text-left px-4 py-2 rounded-lg ${
+                  selectedTab === TABS.PROFILE
+                    ? "bg-white shadow text-[#2C441E] font-semibold"
+                    : "text-white hover:bg-[#56813C]"
+                }`}
+              >
+                Profil
+              </button>
+              <button
+                onClick={() => setSelectedTab(TABS.PASSWORD)}
+                className={`block w-full text-left px-4 py-2 rounded-lg ${
+                  selectedTab === TABS.PASSWORD
+                    ? "bg-white shadow text-[#2C441E] font-semibold"
+                    : "text-white hover:bg-[#56813C]"
+                }`}
+              >
+                Ubah Password
+              </button>
+              <button
+                onClick={() => auth.signOut()}
+                className="mt-8 block w-full text-left text-red-500 px-4 py-2 hover:bg-[#C94749] hover:text-white rounded-lg"
+              >
+                Keluar
+              </button>
+            </nav>
           </div>
 
-          {/* --- Kolom Kanan: Form Data --- */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Form Informasi Umum */}
-            <form
-              onSubmit={handleProfileUpdate}
-              className="bg-white p-6 rounded-xl shadow-md"
-            >
-              <h2 className="text-xl font-semibold text-gray-700 mb-6">
-                Informasi Umum
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="displayName"
-                    className="block text-sm font-medium text-gray-600 mb-1"
-                  >
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    name="displayName"
-                    id="displayName"
-                    value={profileData.displayName}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="location"
-                    className="block text-sm font-medium text-gray-600 mb-1"
-                  >
-                    Lokasi
-                  </label>
-                  <select
-                    name="location"
-                    id="location"
-                    value={profileData.location}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-lg bg-white"
-                  >
-                    {CITIES.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <button
-                type="submit"
-                disabled={isSavingProfile}
-                className="mt-6 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
-              >
-                {isSavingProfile ? "Menyimpan..." : "Simpan Perubahan"}
-              </button>
-            </form>
+          {/* Konten Utama */}
+          <div className="flex-1 p-6 overflow-y-auto">
+            <h2 className="text-2xl font-bold text-[#2C441E] mb-6">
+              {selectedTab}
+            </h2>
 
-            {/* Form Ubah Password */}
-            <form
-              onSubmit={handlePasswordChange}
-              className="bg-white p-6 rounded-xl shadow-md"
-            >
-              <h2 className="text-xl font-semibold text-gray-700 mb-6">
-                Ubah Password
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="currentPassword"
-                    className="block text-sm font-medium text-gray-600 mb-1"
-                  >
-                    Password Saat Ini
-                  </label>
-                  <input
-                    type="password"
-                    id="currentPassword"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="newPassword"
-                    className="block text-sm font-medium text-gray-600 mb-1"
-                  >
-                    Password Baru
-                  </label>
-                  <input
-                    type="password"
-                    id="newPassword"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-lg"
-                    required
-                  />
-                </div>
+            {success && (
+              <div className="bg-green-600 text-white px-4 py-2 mb-4 rounded">
+                {success}
               </div>
-              <button
-                type="submit"
-                disabled={isChangingPassword}
-                className="mt-6 bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-800 disabled:bg-gray-400"
-              >
-                {isChangingPassword ? "Memproses..." : "Ubah Password"}
-              </button>
-            </form>
+            )}
+            {error && (
+              <div className="bg-red-600 text-white px-4 py-2 mb-4 rounded">
+                {error}
+              </div>
+            )}
+
+            {selectedTab === TABS.PROFILE && (
+              <div className="space-y-6">
+                <div className="flex flex-col items-center space-y-4 text-[#2C441E]">
+                  <div className="relative">
+                    <img
+                      src={
+                        imagePreview ||
+                        `https://ui-avatars.com/api/?name=${
+                          profileData.displayName || "User"
+                        }`
+                      }
+                      alt="Profile"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-gray-300"
+                    />
+                    <label className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md cursor-pointer hover:bg-gray-100">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-gray-700"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </label>
+                  </div>
+
+                  {profileImage && (
+                    <div className="flex flex-col items-center space-y-2">
+                      <button
+                        onClick={handlePictureUpload}
+                        disabled={isUploading}
+                        className="bg-[#2C441E] text-sm text-white px-4 py-2 rounded-3xl hover:bg-[#56813C] disabled:opacity-50"
+                      >
+                        {isUploading ? "Mengunggah..." : "Upload Foto"}
+                      </button>
+                      <span className="text-xs text-gray-500">
+                        Foto akan tampil setelah diupload
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#2C441E]">
+                      Nama Lengkap
+                    </label>
+                    <input
+                      type="text"
+                      name="displayName"
+                      value={profileData.displayName}
+                      onChange={handleInputChange}
+                      className="w-full mt-1 p-3 shadow rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2C441E]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-[#2C441E]">
+                      Email
+                    </label>
+                    <input
+                      type="text"
+                      value={user.email}
+                      disabled
+                      className="w-full mt-1 p-3 shadow rounded-xl bg-gray-100 text-gray-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-[#2C441E]">
+                      Lokasi
+                    </label>
+                    <select
+                      name="location"
+                      value={profileData.location}
+                      onChange={handleInputChange}
+                      className="w-full mt-1 p-3 shadow rounded-xl bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2C441E]"
+                    >
+                      {CITIES.map((city) => (
+                        <option key={city} value={city}>
+                          {city}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleProfileSave}
+                  disabled={isSavingProfile}
+                  className="mt-4 w-full bg-[#2C441E] text-white px-4 py-3 rounded-xl hover:bg-[#56813C] transition-colors disabled:opacity-50"
+                >
+                  {isSavingProfile ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            )}
+
+            {selectedTab === TABS.PASSWORD && (
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#2C441E]">
+                      Password Saat Ini
+                    </label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full mt-1 p-3 shadow rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2C441E]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#2C441E]">
+                      Password Baru
+                    </label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full mt-1 p-3 shadow rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#2C441E]"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Password minimal 6 karakter
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handlePasswordSave}
+                  disabled={isChangingPassword}
+                  className="mt-4 w-full bg-[#2C441E] text-white px-4 py-3 rounded-xl hover:bg-[#56813C] transition-colors disabled:opacity-50"
+                >
+                  {isChangingPassword ? "Mengubah..." : "Simpan Password"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
