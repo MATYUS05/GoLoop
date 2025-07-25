@@ -10,7 +10,8 @@ import {
     deleteField,
     writeBatch,
     getDocs,
-    increment
+    increment,
+    getDoc // <-- Pastikan getDoc diimpor
 } from 'firebase/firestore';
 
 function AdminEventCompletionReviewPage() {
@@ -49,22 +50,35 @@ function AdminEventCompletionReviewPage() {
         
         const batch = writeBatch(db);
 
-        // 1. Beri poin ke penyelenggara
-        const organizerRef = doc(db, "users", event.creatorId);
-        // --- PERUBAHAN DI SINI ---
-        batch.update(organizerRef, { points: increment(organizerPoints) });
+        // --- PERBAIKAN DIMULAI DI SINI ---
 
-        // 2. Beri poin ke semua peserta yang terdaftar
+        // 1. Cek dan beri poin ke penyelenggara
+        const organizerRef = doc(db, "users", event.creatorId);
+        const organizerDoc = await getDoc(organizerRef);
+        if (organizerDoc.exists()) {
+            batch.update(organizerRef, { points: increment(organizerPoints) });
+        } else {
+            console.warn(`Peringatan: Dokumen penyelenggara dengan ID ${event.creatorId} tidak ditemukan. Poin tidak diberikan.`);
+        }
+
+        // 2. Cek dan beri poin ke semua peserta yang terdaftar
         const registrationsRef = collection(db, "events", event.id, "registrations");
-        
         const registrationsSnapshot = await getDocs(registrationsRef);
 
-        registrationsSnapshot.forEach((regDoc) => {
+        for (const regDoc of registrationsSnapshot.docs) {
             const participantId = regDoc.data().userId;
-            const participantRef = doc(db, "users", participantId);
-            // --- PERUBAHAN DI SINI ---
-            batch.update(participantRef, { points: increment(participantPoints) });
-        });
+            if (participantId) {
+                const participantRef = doc(db, "users", participantId);
+                const participantDoc = await getDoc(participantRef);
+                if (participantDoc.exists()) {
+                    batch.update(participantRef, { points: increment(participantPoints) });
+                } else {
+                    console.warn(`Peringatan: Dokumen peserta dengan ID ${participantId} tidak ditemukan. Poin tidak diberikan.`);
+                }
+            }
+        }
+
+        // --- AKHIR PERBAIKAN ---
 
         // 3. Update status event menjadi 'completed' dan tandai poin sudah dibagikan
         batch.update(eventRef, { 

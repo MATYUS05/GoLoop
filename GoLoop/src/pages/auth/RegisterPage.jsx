@@ -40,16 +40,18 @@ function RegisterPage() {
         email: formData.email,
         location: '',
         role: 'user',
+        points: 0, 
         createdAt: Timestamp.now(),
       });
       
       // Arahkan ke halaman utama setelah berhasil
-      navigate("/events");
+      navigate("/login");
 
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
         setError('Email ini sudah terdaftar.');
       } else {
+        console.error("Registration Error: ", err);
         setError("Gagal mendaftar. Silakan coba lagi.");
       }
     } finally {
