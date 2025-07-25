@@ -95,21 +95,22 @@ function EventsPage() {
     <div>
       <div className="container mx-auto px-4 md:px-8 py-10 space-y-10">
         {/* Hero Section */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
-          <div className="flex-1 space-y-4">
+        <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-12">
+          <div className="flex-1 text-center lg:text-left">
             <h1 className="text-4xl md:text-5xl font-bold text-[#3B5323] leading-tight">
               Ayo Bersihin <br /> Lingkungan Bersama!
             </h1>
-            <p className="text-[#3B5323] text-lg">
+            <p className="text-[#3B5323] text-sm md:text-lg pb-6 pt-2">
               Yuk bersihin lingkungan bareng orang-orang yang peduli! <br />
               Satu langkah kecilmu bisa berdampak besar
             </p>
           </div>
+
           <div className="flex-1">
             <img
               src={heroImage}
               alt="Bersihin lingkungan"
-              className="w-[300px] mx-auto"
+              className="w-full max-w-md mx-auto"
             />
           </div>
         </div>
