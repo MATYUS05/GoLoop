@@ -16,7 +16,6 @@ import Admin from "./pages/admin/Admin";
 import Home1 from "./pages/user/Home1";
 
 
-
 function App() {
   return (
     <Router>
