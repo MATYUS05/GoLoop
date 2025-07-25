@@ -119,8 +119,7 @@ function CreateEventPage() {
       // 3. Save event to Firestore
       await addDoc(collection(db, "events"), newEvent);
 
-      alert("Event berhasil dibuat dan sedang menunggu persetujuan admin.");
-      navigate("/dashboard");
+      navigate("/event-create")
     } catch (err) {
       console.error("Gagal membuat event:", err);
       setError(`Terjadi kesalahan saat menyimpan event: ${err.message}`);
@@ -312,7 +311,7 @@ function CreateEventPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#2C441E] text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-green-800 disabled:bg-green-400"
+            className="w-full bg-[#2C441E] text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-green-600 disabled:bg-green-800"
           >
             {loading ? "Menyimpan..." : "Submit Event"}
           </button>

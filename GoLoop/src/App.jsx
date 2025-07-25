@@ -16,6 +16,7 @@ import Profile from "./pages/user/Profile";
 import Admin from "./pages/admin/Admin";
 import Home1 from "./pages/user/Home1";
 import KenaliSampah from "./pages/user/KenaliSampah"
+import EventCreatedSuccess from "./pages/user/EventCreatedSuccess";
 
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
           <Route path="/create-event" element={<CreateEventPage />} />
           <Route path="/my-event" element={<MyEventsPage />} />
           <Route path="/event/:eventId" element={<EventDetailPage />} />
+          <Route path="/event-create" element={<EventCreatedSuccess />} />
           <Route
             path="/my-event/participants/:eventId"
             element={<ManageParticipantsPage />}
