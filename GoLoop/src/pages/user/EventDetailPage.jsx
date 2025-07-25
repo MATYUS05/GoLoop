@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import Footer from "../../components/common/Footer";
 import {
   doc,
   getDoc,
@@ -9,6 +8,7 @@ import {
   updateDoc,
   increment,
   onSnapshot,
+  runTransaction,
 } from "firebase/firestore";
 import { db, auth } from "../../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -20,6 +20,33 @@ import {
   FiHome,
   FiArrowLeft,
 } from "react-icons/fi";
+import Footer from "../../components/common/Footer";
+
+const OverallStatusBadge = ({ status }) => {
+  let styles = "bg-gray-100 text-gray-800";
+  if (status === "Pendaftaran Dibuka") {
+    styles = "bg-green-100 text-green-800";
+  } else if (status === "Pendaftaran Penuh") {
+    styles = "bg-[#C94749] text-white";
+  } else if (
+    status === "Menunggu Persetujuan Admin" ||
+    status === "Bukti Sedang Ditinjau" ||
+    status === "Menunggu Bukti dari Penyelenggara"
+  ) {
+    styles = "bg-yellow-100 text-yellow-800";
+  } else if (status === "Event Ditolak") {
+    styles = "bg-red-100 text-red-800";
+  } else if (status === "Event Telah Selesai") {
+    styles = "bg-blue-100 text-blue-800";
+  }
+  return (
+    <span
+      className={`inline-block text-sm font-semibold mr-2 px-3 py-1 rounded-full mb-6 ${styles}`}
+    >
+      {status}
+    </span>
+  );
+};
 
 function EventDetailPage() {
   const { eventId } = useParams();
@@ -28,6 +55,7 @@ function EventDetailPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [registrationStatus, setRegistrationStatus] = useState("loading");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [eventOverallStatus, setEventOverallStatus] = useState("Memuat...");
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -45,10 +73,36 @@ function EventDetailPage() {
         const eventData = { id: docSnap.id, ...docSnap.data() };
         setEvent(eventData);
 
-        const eventDate = eventData.dateTime.toDate();
-        const now = new Date();
+        const eventHasPassed = eventData.dateTime.toDate() < new Date();
+        const isFull = eventData.registered >= eventData.capacity;
 
-        if (eventDate < now) {
+        if (eventData.status === "pending") {
+          setEventOverallStatus("Menunggu Persetujuan Admin");
+        } else if (eventData.status === "rejected") {
+          setEventOverallStatus("Event Ditolak");
+        } else if (eventData.status === "approved") {
+          if (eventHasPassed) {
+            switch (eventData.completionStatus) {
+              case "awaiting_proof":
+                setEventOverallStatus("Menunggu Bukti dari Penyelenggara");
+                break;
+              case "proof_submitted":
+                setEventOverallStatus("Bukti Sedang Ditinjau");
+                break;
+              case "completed":
+                setEventOverallStatus("Event Telah Selesai");
+                break;
+              default:
+                setEventOverallStatus("Event Telah Berakhir");
+            }
+          } else if (isFull) {
+            setEventOverallStatus("Pendaftaran Penuh");
+          } else {
+            setEventOverallStatus("Pendaftaran Dibuka");
+          }
+        }
+
+        if (eventHasPassed) {
           setRegistrationStatus("event_passed");
         } else if (currentUser) {
           if (currentUser.uid === eventData.creatorId) {
@@ -62,9 +116,11 @@ function EventDetailPage() {
               currentUser.uid
             );
             getDoc(regRef).then((regSnap) => {
-              setRegistrationStatus(
-                regSnap.exists() ? regSnap.data().status : "can_register"
-              );
+              if (regSnap.exists()) {
+                setRegistrationStatus(regSnap.data().status);
+              } else {
+                setRegistrationStatus("can_register");
+              }
             });
           }
         } else {
@@ -80,33 +136,56 @@ function EventDetailPage() {
   }, [eventId, currentUser]);
 
   const handleRegister = async () => {
-    if (!currentUser) return alert("Anda harus login untuk mendaftar.");
+    if (!currentUser) {
+      alert("Anda harus login untuk mendaftar.");
+      return;
+    }
+
+    if (eventOverallStatus !== "Pendaftaran Dibuka") {
+      alert("Pendaftaran untuk event ini sudah ditutup atau penuh.");
+      return;
+    }
 
     setIsRegistering(true);
-    try {
-      const regRef = doc(
-        db,
-        "events",
-        eventId,
-        "registrations",
-        currentUser.uid
-      );
-      await setDoc(regRef, {
-        userId: currentUser.uid,
-        displayName: currentUser.displayName,
-        photoURL: currentUser.photoURL || "",
-        status: "pending",
-        registeredAt: Timestamp.now(),
-      });
 
-      const eventRef = doc(db, "events", eventId);
-      await updateDoc(eventRef, {
-        registered: increment(1),
+    try {
+      await runTransaction(db, async (transaction) => {
+        const eventRef = doc(db, "events", eventId);
+        const eventDoc = await transaction.get(eventRef);
+
+        if (!eventDoc.exists()) {
+          throw new Error("Event tidak ditemukan.");
+        }
+
+        const eventData = eventDoc.data();
+
+        if (eventData.registered >= eventData.capacity) {
+          throw new Error("Maaf, pendaftaran sudah penuh.");
+        }
+
+        const regRef = doc(
+          db,
+          "events",
+          eventId,
+          "registrations",
+          currentUser.uid
+        );
+
+        transaction.update(eventRef, { registered: increment(1) });
+
+        transaction.set(regRef, {
+          userId: currentUser.uid,
+          displayName: currentUser.displayName,
+          photoURL: currentUser.photoURL || "",
+          status: "pending",
+          registeredAt: Timestamp.now(),
+        });
       });
 
       setRegistrationStatus("pending");
     } catch (error) {
       console.error("Gagal mendaftar:", error);
+      alert(error.message || "Terjadi kesalahan saat mendaftar.");
     } finally {
       setIsRegistering(false);
     }
@@ -115,10 +194,22 @@ function EventDetailPage() {
   const renderRegisterButton = () => {
     const baseStyle =
       "font-bold py-3 rounded-lg transition-all w-full text-center";
+
+    if (eventOverallStatus === "Pendaftaran Penuh") {
+      return (
+        <button
+          disabled
+          className={`${baseStyle} bg-[#C94749] text-white cursor-not-allowed`}
+        >
+          Pendaftaran Penuh
+        </button>
+      );
+    }
+
     const statusMap = {
       event_passed: [
         "bg-gray-400 text-white cursor-not-allowed",
-        "Pendaftaran Ditutup",
+        "Event Telah Berakhir",
       ],
       is_creator: [
         "bg-gray-400 text-white cursor-not-allowed",
@@ -192,8 +283,7 @@ function EventDetailPage() {
               {event.title}
             </h1>
             <div className="flex items-center mt-2">
-              <FiCalendar className="mr-2" />
-              <span className="font-medium">{eventDate}</span>
+              <OverallStatusBadge status={eventOverallStatus} />
             </div>
           </div>
         </div>

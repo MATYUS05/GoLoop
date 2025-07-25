@@ -6,7 +6,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import Footer from "../../components/common/Footer";
 import bgEvents from "../../assets/img/bg-events.svg";
 
-
 const CITIES = [
   "Jakarta",
   "Surabaya",
@@ -31,6 +30,7 @@ function CreateEventPage() {
     capacity: "",
   });
   const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -58,14 +58,15 @@ function CreateEventPage() {
   }, [navigate]);
 
   const handleChange = (e) => {
-    // Perbaikan kecil: Ambil name dan value dari e.target
     const { name, value } = e.target;
     setEventData((prevData) => ({ ...prevData, [name]: value }));
   };
 
   const handleImageChange = (e) => {
-    if (e.target.files[0]) {
-      setImageFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -86,6 +87,7 @@ function CreateEventPage() {
     setError("");
 
     try {
+      // 1. Upload image to Cloudinary
       const formData = new FormData();
       formData.append("file", imageFile);
       formData.append(
@@ -102,6 +104,7 @@ function CreateEventPage() {
       }
       const imageUrl = data.secure_url;
 
+      // 2. Prepare event object for Firestore
       const newEvent = {
         ...eventData,
         imageUrl: imageUrl,
@@ -110,12 +113,14 @@ function CreateEventPage() {
         creatorId: user.uid,
         registered: 0,
         status: "pending",
+        completionStatus: "awaiting_proof",
       };
 
+      // 3. Save event to Firestore
       await addDoc(collection(db, "events"), newEvent);
 
       alert("Event berhasil dibuat dan sedang menunggu persetujuan admin.");
-      navigate("/my-event");
+      navigate("/dashboard");
     } catch (err) {
       console.error("Gagal membuat event:", err);
       setError(`Terjadi kesalahan saat menyimpan event: ${err.message}`);
@@ -132,16 +137,17 @@ function CreateEventPage() {
       }}
     >
       <div className="container mx-auto p-8 max-w-2xl">
-        <h1 className="text-3xl font-bold mb-6">Buat Event Baru</h1>
+        <h1 className="text-3xl font-bold mb-6 text-[#2C441E]">
+          Buat Event Baru
+        </h1>
         <form
           onSubmit={handleSubmit}
           className="p-6 bg-white rounded-lg shadow-md space-y-4"
         >
-          {/* --- FIELD FORM YANG HILANG SUDAH DIKEMBALIKAN --- */}
           <div>
             <label
               htmlFor="title"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-[#2C441E]"
             >
               Judul Event
             </label>
@@ -159,7 +165,7 @@ function CreateEventPage() {
           <div>
             <label
               htmlFor="location"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-[#2C441E]"
             >
               Lokasi (Kota)
             </label>
@@ -182,7 +188,7 @@ function CreateEventPage() {
           <div>
             <label
               htmlFor="locationDetail"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-[#2C441E]"
             >
               Detail Lokasi
             </label>
@@ -201,7 +207,7 @@ function CreateEventPage() {
           <div>
             <label
               htmlFor="description"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-[#2C441E]"
             >
               Deskripsi Event
             </label>
@@ -220,7 +226,7 @@ function CreateEventPage() {
           <div>
             <label
               htmlFor="organizer"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-[#2C441E]"
             >
               Penyelenggara
             </label>
@@ -238,7 +244,7 @@ function CreateEventPage() {
           <div>
             <label
               htmlFor="image"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-[#2C441E]"
             >
               Gambar Event
             </label>
@@ -248,16 +254,25 @@ function CreateEventPage() {
               id="image"
               accept="image/*"
               onChange={handleImageChange}
-              className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+              className="mt-1 block w-full text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2C441E] hover:file:bg-[#3B5323]"
               required
             />
+            {imagePreview && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-[#2C441E]">Pratinjau:</p>
+                <img
+                  src={imagePreview}
+                  alt="Pratinjau event"
+                  className="mt-2 rounded-md h-40 w-auto object-cover border"
+                />
+              </div>
+            )}
           </div>
-          {/* ---------------------------------------------------- */}
 
           <div>
             <label
               htmlFor="dateTime"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-[#2C441E]"
             >
               Tanggal & Waktu
             </label>
@@ -276,7 +291,7 @@ function CreateEventPage() {
           <div>
             <label
               htmlFor="capacity"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-[#2C441E]"
             >
               Kapasitas Peserta
             </label>
@@ -297,7 +312,7 @@ function CreateEventPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-green-800 disabled:bg-green-400"
+            className="w-full bg-[#2C441E] text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-green-800 disabled:bg-green-400"
           >
             {loading ? "Menyimpan..." : "Submit Event"}
           </button>

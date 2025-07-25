@@ -126,7 +126,7 @@ function MyEventsPage() {
               </h2>
               <Link
                 to="/create-event"
-                className="rounded-md bg-[#2C441E] py-2 px-4 text-sm font-semibold text-white shadow-sm hover:bg-green-800"
+                className="rounded-3xl bg-[#2C441E] py-2 px-4 text-sm font-semibold text-white shadow-sm hover:bg-[#8D964D]"
               >
                 + Buat Event Baru
               </Link>
