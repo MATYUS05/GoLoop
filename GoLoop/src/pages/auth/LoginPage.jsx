@@ -7,7 +7,8 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore"; 
+import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
+
 function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -17,16 +18,23 @@ function LoginPage() {
 
   const checkAndRedirect = async (user) => {
     if (!user) return;
-    const userDocRef = doc(db, "users", user.uid);
-    const userDoc = await getDoc(userDocRef);
+    try {
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
 
-    if (userDoc.exists() && userDoc.data().role === "admin") {
-      navigate("/admindashboard");
-    } else {
-      navigate("/dashboard"); 
+      if (userDoc.exists() && userDoc.data().role === "admin") {
+        navigate("/admindashboard");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      // Menangkap error jika ada masalah membaca data user dari Firestore
+      console.error("Gagal membaca data user:", err);
+      setError("Gagal memverifikasi role pengguna.");
     }
   };
 
+  // --- FUNGSI INI YANG DIUBAH ---
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setError("");
@@ -35,13 +43,27 @@ function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       await checkAndRedirect(userCredential.user);
     } catch (err) {
-      setError("Email atau password salah.");
+      // Memberikan pesan error yang lebih spesifik
+      console.error("Login Error Code:", err.code);
+      switch (err.code) {
+        case 'auth/user-not-found':
+          setError("Email tidak terdaftar.");
+          break;
+        case 'auth/wrong-password':
+          setError("Password yang Anda masukkan salah.");
+          break;
+        case 'auth/user-disabled':
+          setError("Akun ini telah dinonaktifkan oleh admin.");
+          break;
+        default:
+          setError("Gagal login. Silakan coba beberapa saat lagi.");
+          break;
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // --- FUNGSI INI YANG DIPERBAIKI ---
   const handleGoogleSignIn = async () => {
     setError("");
     setLoading(true);
@@ -50,11 +72,9 @@ function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Cek apakah dokumen user sudah ada di Firestore
       const docRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(docRef);
 
-      // Jika dokumen BELUM ada, buatkan profilnya di Firestore
       if (!docSnap.exists()) {
         await setDoc(docRef, {
           uid: user.uid,
@@ -67,10 +87,10 @@ function LoginPage() {
         });
       }
       
-      // Setelah memastikan dokumen ada, baru arahkan pengguna
       await checkAndRedirect(user);
 
     } catch (err) {
+      console.error("Google Sign-In Error:", err);
       setError("Gagal login dengan Google. Silakan coba lagi.");
     } finally {
       setLoading(false);
@@ -78,6 +98,7 @@ function LoginPage() {
   };
 
   return (
+    // ... JSX (Tampilan) tidak ada perubahan, jadi tidak perlu disalin ulang
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
       <button
         onClick={() => navigate("/")}

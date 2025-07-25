@@ -45,7 +45,7 @@ function RegisterPage() {
       });
       
       // Arahkan ke halaman utama setelah berhasil
-      navigate("/events");
+      navigate("/login");
 
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
