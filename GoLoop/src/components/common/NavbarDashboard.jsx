@@ -61,10 +61,14 @@ function NavbarDashboard() {
                 aria-label="User profile"
               >
                 {user && user.photoURL ? (
-                  <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" />
+                  <img
+                    src={user.photoURL}
+                    alt="Profil"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <span className="w-full h-full flex items-center justify-center text-lg font-bold text-white bg-indigo-500">
-                    {user ? user.email.charAt(0).toUpperCase() : '?'}
+                    {user ? user.email.charAt(0).toUpperCase() : "?"}
                   </span>
                 )}
               </Link>
@@ -81,8 +85,8 @@ function NavbarDashboard() {
       )}
 
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out z-40 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 left-0 h-full w-64 bg-[#3E532D] text-white transform transition-transform duration-300 ease-in-out z-40 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="p-4">
@@ -93,26 +97,44 @@ function NavbarDashboard() {
             </button>
           </div>
           <nav>
-            <Link to="/dashboard" onClick={toggleSidebar} className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
-              Dashboard
+            <Link
+              to="/home1"
+              onClick={toggleSidebar}
+              className="block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
+            >
+              Home
             </Link>
-            <Link to="/profile" onClick={toggleSidebar} className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
+            <Link
+              to="/dashboard"
+              onClick={toggleSidebar}
+              className="block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
+            >
+              Events
+            </Link>
+            <Link
+              to="/profile"
+              onClick={toggleSidebar}
+              className="block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
+            >
               Profil
             </Link>
-            <Link to="/my-event" onClick={toggleSidebar} className="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700">
+            <Link
+              to="/my-event"
+              onClick={toggleSidebar}
+              className="block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
+            >
               MyEvent
             </Link>
-            <button 
-              onClick={handleLogout} 
-              className="w-full text-left block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700"
+            <button
+              onClick={handleLogout}
+              className="w-full text-left block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
             >
               Logout
             </button>
           </nav>
         </div>
       </aside>
-      <div className="pt-16">
-      </div>
+      <div className="pt-16"></div>
     </>
   );
 }
