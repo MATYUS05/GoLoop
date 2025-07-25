@@ -13,6 +13,7 @@ import EventDetailPage from "./pages/user/EventDetailPage";
 import ManageParticipantsPage from "./pages/user/ManageParticipantsPage";
 import Profile from "./pages/user/Profile";
 import Admin from "./pages/admin/Admin";
+import Home1 from "./pages/user/Home1";
 
 
 function App() {
@@ -27,10 +28,14 @@ function App() {
         {/* User Dashboard */}
         <Route element={<Dashboard />}>
           <Route path="/profile" element={<Profile />} />
+          <Route path="/home1" element={<Home1 />} />
           <Route path="/create-event" element={<CreateEventPage />} />
           <Route path="/my-event" element={<MyEventsPage />} />
           <Route path="/event/:eventId" element={<EventDetailPage />} />
-           <Route path="/my-event/participants/:eventId" element={<ManageParticipantsPage />} />
+          <Route
+            path="/my-event/participants/:eventId"
+            element={<ManageParticipantsPage />}
+          />
           <Route path="/dashboard" element={<Events />} />
         </Route>
 
