@@ -125,6 +125,13 @@ function NavbarDashboard() {
             >
               MyEvent
             </Link>
+            <Link
+              to="/kenali-sampah"
+              onClick={toggleSidebar}
+              className="block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
+            >
+              Kenali Sampah
+            </Link>
             <button
               onClick={handleLogout}
               className="w-full text-left block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
