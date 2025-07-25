@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import Footer from '../../components/common/Footer';
 import { db } from '../../firebase/firebase';
 import { 
   collection, 
@@ -126,6 +127,7 @@ function ManageParticipantsPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

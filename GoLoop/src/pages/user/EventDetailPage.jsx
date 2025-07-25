@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import Footer from "../../components/common/Footer";
 import {
   doc,
   getDoc,
@@ -301,6 +302,7 @@ function EventDetailPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { auth, db } from "../../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import emptyTrash from "../../assets/img/empty-trash.png";
+import Footer from "../../components/common/Footer";
 import emptyTrash1 from "../../assets/img/empty-trash1.png";
 
 
@@ -266,6 +267,7 @@ function MyEventsPage() {
           </section>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

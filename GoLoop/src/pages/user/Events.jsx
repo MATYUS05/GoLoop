@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { auth, db } from "../../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import Footer from "../../components/common/Footer";
 import { HiOutlineLocationMarker } from "react-icons/hi";
 import {
   doc,
@@ -159,6 +160,7 @@ function EventsPage() {
           </p>
         </div>
       )}
+      <Footer />
     </div>
   );
 }

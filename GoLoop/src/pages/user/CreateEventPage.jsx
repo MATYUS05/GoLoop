@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../firebase/firebase";
 import { addDoc, collection, Timestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import Footer from "../../components/common/Footer";
 import bgEvents from "../../assets/img/bg-events.svg";
 
 
@@ -302,6 +303,7 @@ function CreateEventPage() {
           </button>
         </form>
       </div>
+      <Footer />
     </div>
   );
 }
