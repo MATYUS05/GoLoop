@@ -117,14 +117,14 @@ function EventsPage() {
         {/* Filter + Create Event */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
+            <h2 className="text-xl md:text-2xl font-semibold text-[#2C441E]">
               Terdekat
             </h2>
             <div className="relative">
               <select
                 value={selectedLocation}
                 onChange={handleLocationChange}
-                className="bg-[#2C441E]  text-white text-sm font-semibold pl-10 pr-4 py-2 rounded-full focus:outline-none shadow-sm sm:w-40"
+                className="appearance-none bg-[#2C441E] text-white text-sm font-semibold pl-10 pr-10 py-2 rounded-full focus:outline-none shadow-sm sm:w-40"
               >
                 <option value="" disabled>
                   Pilih Lokasi
@@ -135,7 +135,14 @@ function EventsPage() {
                   </option>
                 ))}
               </select>
+
+              {/* Icon Lokasi */}
               <HiOutlineLocationMarker className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white text-lg pointer-events-none" />
+
+              {/* Icon Panah Dropdown */}
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white text-xs pointer-events-none">
+                ▼
+              </span>
             </div>
           </div>
 
