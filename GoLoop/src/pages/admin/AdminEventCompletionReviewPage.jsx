@@ -51,20 +51,19 @@ function AdminEventCompletionReviewPage() {
 
         // 1. Beri poin ke penyelenggara
         const organizerRef = doc(db, "users", event.creatorId);
-        batch.update(organizerRef, { poin: increment(organizerPoints) });
+        // --- PERUBAHAN DI SINI ---
+        batch.update(organizerRef, { points: increment(organizerPoints) });
 
         // 2. Beri poin ke semua peserta yang terdaftar
         const registrationsRef = collection(db, "events", event.id, "registrations");
         
-        // --- PERBAIKAN DI SINI ---
-        // Query tidak lagi memfilter berdasarkan status 'approved'.
-        // Ini akan mengambil SEMUA dokumen di sub-koleksi registrations.
         const registrationsSnapshot = await getDocs(registrationsRef);
 
         registrationsSnapshot.forEach((regDoc) => {
             const participantId = regDoc.data().userId;
             const participantRef = doc(db, "users", participantId);
-            batch.update(participantRef, { poin: increment(participantPoints) });
+            // --- PERUBAHAN DI SINI ---
+            batch.update(participantRef, { points: increment(participantPoints) });
         });
 
         // 3. Update status event menjadi 'completed' dan tandai poin sudah dibagikan
