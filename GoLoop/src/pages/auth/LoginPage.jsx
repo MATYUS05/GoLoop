@@ -62,7 +62,8 @@ function LoginPage() {
           email: user.email,
           location: '',
           role: 'user',
-          createdAt: Timestamp.now()
+          createdAt: Timestamp.now(),
+          points: 0,
         });
       }
       

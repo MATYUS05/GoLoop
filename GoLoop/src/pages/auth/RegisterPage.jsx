@@ -41,6 +41,7 @@ function RegisterPage() {
         location: '',
         role: 'user',
         createdAt: Timestamp.now(),
+        points: 0,
       });
       
       // Arahkan ke halaman utama setelah berhasil
