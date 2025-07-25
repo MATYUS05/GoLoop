@@ -8,6 +8,7 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore"; 
+
 function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -41,7 +42,6 @@ function LoginPage() {
     }
   };
 
-  // --- FUNGSI INI YANG DIPERBAIKI ---
   const handleGoogleSignIn = async () => {
     setError("");
     setLoading(true);
@@ -50,26 +50,27 @@ function LoginPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Cek apakah dokumen user sudah ada di Firestore
       const docRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(docRef);
 
-      // Jika dokumen BELUM ada, buatkan profilnya di Firestore
       if (!docSnap.exists()) {
+        // --- PERBAIKAN DI SINI ---
+        // Menambahkan 'points: 0' saat membuat profil baru via Google Sign-In.
         await setDoc(docRef, {
           uid: user.uid,
           displayName: user.displayName,
           email: user.email,
           location: '',
           role: 'user',
+          points: 0, // Inisialisasi poin
           createdAt: Timestamp.now()
         });
       }
       
-      // Setelah memastikan dokumen ada, baru arahkan pengguna
       await checkAndRedirect(user);
 
     } catch (err) {
+      console.error("Google Sign-In Error:", err);
       setError("Gagal login dengan Google. Silakan coba lagi.");
     } finally {
       setLoading(false);
@@ -151,3 +152,4 @@ function LoginPage() {
 }
 
 export default LoginPage;
+  

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase/firebase'; // Sesuaikan path ke file konfigurasi firebase Anda
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore'; // Ganti getDocs dengan onSnapshot
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 
 // Komponen kecil untuk menampilkan ikon peringkat
 const RankIndicator = ({ rank }) => {
@@ -17,17 +17,14 @@ function Leaderboard() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // 1. Membuat query ke koleksi 'users'
     const usersCollection = collection(db, 'users');
     const q = query(
       usersCollection, 
-      orderBy('poin', 'desc'), // Mengurutkan berdasarkan 'poin' dari tertinggi ke terendah
-      limit(10)                 // Membatasi hanya 10 pengguna teratas
+      orderBy('points', 'desc'), // Menggunakan 'points'
+      limit(10)
     );
 
-    // 2. Menggunakan onSnapshot untuk listener real-time
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      // Setiap kali ada perubahan data yang cocok dengan query, kode ini akan berjalan
       const users = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -37,21 +34,20 @@ function Leaderboard() {
       setLoading(false);
       setError(null);
     }, (err) => {
-      // Menangani error dari listener
       console.error("Error fetching leaderboard: ", err);
       if (err.code === 'permission-denied') {
            setError("Gagal memuat data. Anda tidak memiliki izin untuk melihat daftar ini.");
+      } else if (err.code === 'failed-precondition') {
+           setError("Gagal memuat data. Diperlukan indeks Firestore. Silakan periksa konsol untuk link pembuatan indeks.");
       } else {
           setError("Terjadi kesalahan saat memuat papan peringkat.");
       }
       setLoading(false);
     });
 
-    // 3. Membersihkan listener saat komponen di-unmount
-    // Ini penting untuk mencegah memory leak
     return () => unsubscribe();
     
-  }, []); // Dependency array kosong agar useEffect hanya berjalan sekali
+  }, []);
 
   if (loading) {
     return <div className="text-center p-8">Memuat papan peringkat...</div>;
@@ -88,16 +84,18 @@ function Leaderboard() {
                         {/* Kolom Nama Pengguna */}
                         <div className="col-span-7 flex items-center">
                             <img 
-                                src={user.photoURL || `https://placehold.co/40x40/E2E8F0/4A5568?text=${user.nama.charAt(0)}`} 
-                                alt={user.nama}
+                                // --- PERBAIKAN DI SINI ---
+                                src={user.photoURL || `https://placehold.co/40x40/E2E8F0/4A5568?text=${user.displayName ? user.displayName.charAt(0) : 'U'}`} 
+                                alt={user.displayName || 'User'}
                                 className="w-10 h-10 rounded-full mr-4 object-cover"
                             />
-                            <span className="font-medium text-gray-800">{user.nama}</span>
+                            {/* --- PERBAIKAN DI SINI --- */}
+                            <span className="font-medium text-gray-800">{user.displayName || 'User Tanpa Nama'}</span>
                         </div>
                         {/* Kolom Poin */}
                         <div className="col-span-3 text-right font-semibold text-green-600 text-lg">
-                            {/* Pastikan field 'poin' ada sebelum menampilkannya */}
-                            {user.poin ? user.poin.toLocaleString('id-ID') : 0}
+                            {/* Menggunakan 'points' */}
+                            {user.points ? user.points.toLocaleString('id-ID') : 0}
                         </div>
                     </div>
                 ))

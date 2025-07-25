@@ -11,6 +11,7 @@ import {
   query,
   where,
   getDocs,
+  orderBy,
 } from "firebase/firestore";
 import EventCard from "../../components/common/EventCard";
 import heroImage from "../../assets/img/hero-clean.svg";
@@ -20,22 +21,23 @@ function EventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [availableLocations, setAvailableLocations] = useState([]);
+  // Default ke "" yang akan kita artikan sebagai "Semua Lokasi"
   const [selectedLocation, setSelectedLocation] = useState("");
 
-  // Fetch available locations
+  // Fetch daftar lokasi unik yang tersedia dari semua event
   useEffect(() => {
     const fetchLocations = async () => {
       const eventsRef = collection(db, "events");
       const q = query(eventsRef, where("status", "==", "approved"));
       const querySnapshot = await getDocs(q);
       const locations = querySnapshot.docs.map((doc) => doc.data().location);
-      const uniqueLocations = [...new Set(locations)];
+      const uniqueLocations = [...new Set(locations)].sort(); // Urutkan lokasi secara alfabetis
       setAvailableLocations(uniqueLocations);
     };
     fetchLocations();
   }, []);
 
-  // Set user location on auth state change
+  // Cek status login dan atur lokasi default pengguna
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -43,34 +45,41 @@ function EventsPage() {
         if (userDoc.exists()) {
           const profile = userDoc.data();
           setUserProfile(profile);
+          // Jika pengguna punya lokasi, jadikan itu sebagai filter default.
+          // Jika tidak, selectedLocation akan tetap "" (Semua Lokasi).
           if (profile.location) {
             setSelectedLocation(profile.location);
           }
         }
-      } else {
-        setLoading(false);
       }
+      // Biarkan loading berlanjut sampai event selesai di-fetch
     });
     return () => unsubscribe();
   }, []);
 
-  // Fetch events when location changes
+  // Fetch events berdasarkan lokasi yang dipilih (selectedLocation)
   useEffect(() => {
     const fetchEvents = async () => {
-      if (!selectedLocation) {
-        setEvents([]);
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       try {
         const eventsRef = collection(db, "events");
-        const q = query(
-          eventsRef,
-          where("location", "==", selectedLocation),
-          where("status", "==", "approved")
-        );
+        let q;
+
+        // --- LOGIKA BARU ---
+        // Query dasar untuk semua event yang disetujui, diurutkan dari yang terbaru
+        const baseQueryConstraints = [
+            where("status", "==", "approved"),
+            orderBy("dateTime", "desc")
+        ];
+
+        if (selectedLocation) {
+          // Jika ada lokasi yang dipilih, tambahkan filter lokasi
+          q = query(eventsRef, where("location", "==", selectedLocation), ...baseQueryConstraints);
+        } else {
+          // Jika tidak ada lokasi (selectedLocation = ""), fetch semua event
+          q = query(eventsRef, ...baseQueryConstraints);
+        }
+
         const querySnapshot = await getDocs(q);
         const fetchedEvents = querySnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -85,7 +94,7 @@ function EventsPage() {
     };
 
     fetchEvents();
-  }, [selectedLocation]);
+  }, [selectedLocation]); // Jalankan ulang setiap kali selectedLocation berubah
 
   const handleLocationChange = (e) => {
     setSelectedLocation(e.target.value);
@@ -119,35 +128,26 @@ function EventsPage() {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <h2 className="text-xl md:text-2xl font-semibold text-[#2C441E]">
-              Terdekat
+              Acara di
             </h2>
             <div className="relative">
               <select
                 value={selectedLocation}
                 onChange={handleLocationChange}
-                className="appearance-none bg-[#2C441E] text-white text-sm font-semibold pl-10 pr-10 py-2 rounded-full focus:outline-none shadow-sm sm:w-40"
+                className="appearance-none bg-[#2C441E] text-white text-sm font-semibold pl-10 pr-10 py-2 rounded-full focus:outline-none shadow-sm sm:w-48"
               >
-                <option value="" disabled>
-                  Pilih Lokasi
-                </option>
+                {/* Opsi statis untuk menampilkan semua lokasi */}
+                <option value="">Semua Lokasi</option>
                 {availableLocations.map((location) => (
                   <option key={location} value={location}>
                     {location}
                   </option>
                 ))}
               </select>
-
-              {/* Icon Lokasi */}
               <HiOutlineLocationMarker className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white text-lg pointer-events-none" />
-
-              {/* Icon Panah Dropdown */}
-              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white text-xs pointer-events-none">
-                ▼
-              </span>
+              <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white text-xs pointer-events-none">▼</span>
             </div>
           </div>
-
-          {/* Create Event Button */}
           <Link
             to="/create-event"
             className="bg-[#2C441E] text-white font-semibold px-4 py-2 rounded-3xl shadow-sm hover:bg-green-800 transition-colors"
@@ -161,7 +161,7 @@ function EventsPage() {
           <p className="text-center py-10">
             {selectedLocation
               ? `Mencari acara di ${selectedLocation}...`
-              : "Memuat daftar acara..."}
+              : "Memuat semua acara..."}
           </p>
         )}
 
@@ -173,24 +173,13 @@ function EventsPage() {
           </div>
         )}
 
-        {!loading && events.length === 0 && selectedLocation && (
+        {!loading && events.length === 0 && (
           <div className="text-center py-10 px-4 border rounded-lg bg-gray-50">
             <p className="font-semibold">
-              Yah, belum ada acara di {selectedLocation}.
+              Yah, belum ada acara di {selectedLocation || 'lokasi ini'}.
             </p>
             <p className="text-gray-600">
               Coba pilih lokasi lain atau buat acaramu sendiri!
-            </p>
-          </div>
-        )}
-
-        {!loading && !selectedLocation && (
-          <div className="text-center py-10 px-4 border rounded-lg bg-gray-50">
-            <p className="font-semibold">
-              Silakan pilih lokasi untuk melihat acara
-            </p>
-            <p className="text-gray-600">
-              Pilih lokasi dari dropdown di atas untuk menemukan acara terdekat
             </p>
           </div>
         )}

@@ -8,16 +8,17 @@ import {
     doc, 
     updateDoc, 
     deleteField,
-    writeBatch, // <-- Impor writeBatch
-    getDocs,     // <-- Impor getDocs
-    increment    // <-- Impor increment
+    writeBatch,
+    getDocs,
+    increment,
+    getDoc // <-- Pastikan getDoc diimpor
 } from 'firebase/firestore';
 
 function AdminEventCompletionReviewPage() {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [processingId, setProcessingId] = useState(null); // Untuk menonaktifkan tombol saat proses
+  const [processingId, setProcessingId] = useState(null);
 
   useEffect(() => {
     const q = query(
@@ -38,33 +39,46 @@ function AdminEventCompletionReviewPage() {
     return () => unsubscribe();
   }, []);
 
-  // --- FUNGSI INI DIUBAH TOTAL ---
   const handleApproval = async (event, approve) => {
-    setProcessingId(event.id); // Mulai proses, nonaktifkan tombol
+    setProcessingId(event.id);
     const eventRef = doc(db, 'events', event.id);
     
     try {
       if (approve) {
-        // --- PROSES PERSETUJUAN & PEMBAGIAN POIN ---
         const organizerPoints = event.organizerPoints || 3;
         const participantPoints = event.participantPoints || 1;
         
         const batch = writeBatch(db);
 
-        // 1. Beri poin ke penyelenggara
+        // --- PERBAIKAN DIMULAI DI SINI ---
+
+        // 1. Cek dan beri poin ke penyelenggara
         const organizerRef = doc(db, "users", event.creatorId);
-        batch.update(organizerRef, { poin: increment(organizerPoints) });
+        const organizerDoc = await getDoc(organizerRef);
+        if (organizerDoc.exists()) {
+            batch.update(organizerRef, { points: increment(organizerPoints) });
+        } else {
+            console.warn(`Peringatan: Dokumen penyelenggara dengan ID ${event.creatorId} tidak ditemukan. Poin tidak diberikan.`);
+        }
 
-        // 2. Beri poin ke semua peserta yang disetujui
+        // 2. Cek dan beri poin ke semua peserta yang terdaftar
         const registrationsRef = collection(db, "events", event.id, "registrations");
-        const regQuery = query(registrationsRef, where("status", "==", "approved"));
-        const registrationsSnapshot = await getDocs(regQuery);
+        const registrationsSnapshot = await getDocs(registrationsRef);
 
-        registrationsSnapshot.forEach((regDoc) => {
+        for (const regDoc of registrationsSnapshot.docs) {
             const participantId = regDoc.data().userId;
-            const participantRef = doc(db, "users", participantId);
-            batch.update(participantRef, { poin: increment(participantPoints) });
-        });
+            if (participantId) {
+                const participantRef = doc(db, "users", participantId);
+                const participantDoc = await getDoc(participantRef);
+                if (participantDoc.exists()) {
+                    batch.update(participantRef, { points: increment(participantPoints) });
+                } else {
+                    console.warn(`Peringatan: Dokumen peserta dengan ID ${participantId} tidak ditemukan. Poin tidak diberikan.`);
+                }
+            }
+        }
+
+        // --- AKHIR PERBAIKAN ---
 
         // 3. Update status event menjadi 'completed' dan tandai poin sudah dibagikan
         batch.update(eventRef, { 
@@ -78,7 +92,7 @@ function AdminEventCompletionReviewPage() {
         alert(`Bukti disetujui dan poin berhasil dibagikan untuk event: ${event.title}`);
 
       } else {
-        // --- PROSES PENOLAKAN BUKTI (TETAP SAMA) ---
+        // Proses penolakan bukti (tidak berubah)
         await updateDoc(eventRef, {
             completionStatus: 'awaiting_proof',
             completionProofImageUrl: deleteField() 
@@ -89,7 +103,7 @@ function AdminEventCompletionReviewPage() {
       console.error("Gagal memproses persetujuan bukti:", err);
       alert('Terjadi kesalahan saat memproses permintaan.');
     } finally {
-      setProcessingId(null); // Selesai proses, aktifkan kembali tombol
+      setProcessingId(null);
     }
   };
 
