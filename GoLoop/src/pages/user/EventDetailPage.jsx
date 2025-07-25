@@ -1,25 +1,31 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import Footer from "../../components/common/Footer";
-import {
-  doc,
-  getDoc,
-  setDoc,
-  Timestamp,
-  updateDoc,
-  increment,
-  onSnapshot,
-} from "firebase/firestore";
-import { db, auth } from "../../firebase/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import {
-  FiMapPin,
-  FiCalendar,
-  FiClock,
-  FiUsers,
-  FiHome,
-  FiArrowLeft,
-} from "react-icons/fi";
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { doc, getDoc, setDoc, Timestamp, updateDoc, increment, onSnapshot, runTransaction } from 'firebase/firestore'; // Import runTransaction
+import { db, auth } from '../../firebase/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { FiMapPin, FiCalendar, FiClock, FiUsers, FiHome } from 'react-icons/fi';
+
+// Komponen badge status dengan tambahan logika untuk "Penuh"
+const OverallStatusBadge = ({ status }) => {
+    let styles = "bg-gray-100 text-gray-800";
+    if (status === 'Pendaftaran Dibuka') {
+        styles = "bg-green-100 text-green-800";
+    } else if (status === 'Pendaftaran Penuh') {
+        styles = "bg-orange-100 text-orange-800"; // Warna baru untuk status Penuh
+    } else if (status === 'Menunggu Persetujuan Admin' || status === 'Bukti Sedang Ditinjau' || status === 'Menunggu Bukti dari Penyelenggara') {
+        styles = "bg-yellow-100 text-yellow-800";
+    } else if (status === 'Event Ditolak') {
+        styles = "bg-red-100 text-red-800";
+    } else if (status === 'Event Telah Selesai') {
+        styles = "bg-blue-100 text-blue-800";
+    }
+    return (
+        <span className={`inline-block text-sm font-semibold mr-2 px-3 py-1 rounded-full mb-6 ${styles}`}>
+            {status}
+        </span>
+    );
+};
+
 
 function EventDetailPage() {
   const { eventId } = useParams();
@@ -28,6 +34,7 @@ function EventDetailPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [registrationStatus, setRegistrationStatus] = useState("loading");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [eventOverallStatus, setEventOverallStatus] = useState('Memuat...');
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -45,11 +52,37 @@ function EventDetailPage() {
         const eventData = { id: docSnap.id, ...docSnap.data() };
         setEvent(eventData);
 
-        const eventDate = eventData.dateTime.toDate();
-        const now = new Date();
+        const eventHasPassed = eventData.dateTime.toDate() < new Date();
+        const isFull = eventData.registered >= eventData.capacity;
 
-        if (eventDate < now) {
-          setRegistrationStatus("event_passed");
+        if (eventData.status === 'pending') {
+          setEventOverallStatus('Menunggu Persetujuan Admin');
+        } else if (eventData.status === 'rejected') {
+          setEventOverallStatus('Event Ditolak');
+        } else if (eventData.status === 'approved') {
+          if (eventHasPassed) {
+            switch (eventData.completionStatus) {
+              case 'awaiting_proof':
+                setEventOverallStatus('Menunggu Bukti dari Penyelenggara');
+                break;
+              case 'proof_submitted':
+                setEventOverallStatus('Bukti Sedang Ditinjau');
+                break;
+              case 'completed':
+                setEventOverallStatus('Event Telah Selesai');
+                break;
+              default:
+                setEventOverallStatus('Event Telah Berakhir');
+            }
+          } else if (isFull) {
+            setEventOverallStatus('Pendaftaran Penuh');
+          } else {
+            setEventOverallStatus('Pendaftaran Dibuka');
+          }
+        }
+
+        if (eventHasPassed) {
+          setRegistrationStatus('event_passed');
         } else if (currentUser) {
           if (currentUser.uid === eventData.creatorId) {
             setRegistrationStatus("is_creator");
@@ -79,80 +112,87 @@ function EventDetailPage() {
     return () => unsubscribeEvent();
   }, [eventId, currentUser]);
 
+  // --- FUNGSI INI DIUBAH MENGGUNAKAN TRANSAKSI ---
   const handleRegister = async () => {
-    if (!currentUser) return alert("Anda harus login untuk mendaftar.");
-
+    if (!currentUser) {
+      alert("Anda harus login untuk mendaftar.");
+      return;
+    }
+    // Pengecekan awal di sisi klien untuk UX
+    if (eventOverallStatus !== 'Pendaftaran Dibuka') {
+      alert("Pendaftaran untuk event ini sudah ditutup atau penuh.");
+      return;
+    }
+    
     setIsRegistering(true);
+    
     try {
-      const regRef = doc(
-        db,
-        "events",
-        eventId,
-        "registrations",
-        currentUser.uid
-      );
-      await setDoc(regRef, {
-        userId: currentUser.uid,
-        displayName: currentUser.displayName,
-        photoURL: currentUser.photoURL || "",
-        status: "pending",
-        registeredAt: Timestamp.now(),
+      // Menjalankan pendaftaran sebagai transaksi untuk mencegah race condition
+      await runTransaction(db, async (transaction) => {
+        const eventRef = doc(db, 'events', eventId);
+        const eventDoc = await transaction.get(eventRef);
+
+        if (!eventDoc.exists()) {
+          throw new Error("Event tidak ditemukan.");
+        }
+
+        const eventData = eventDoc.data();
+        
+        // Pengecekan krusial di dalam transaksi
+        if (eventData.registered >= eventData.capacity) {
+          throw new Error("Maaf, pendaftaran sudah penuh.");
+        }
+
+        // Jika masih ada tempat, lanjutkan pendaftaran
+        const regRef = doc(db, 'events', eventId, 'registrations', currentUser.uid);
+        
+        // 1. Update dokumen event (tambah jumlah pendaftar)
+        transaction.update(eventRef, { registered: increment(1) });
+        
+        // 2. Buat dokumen pendaftaran baru untuk pengguna
+        transaction.set(regRef, {
+          userId: currentUser.uid,
+          displayName: currentUser.displayName,
+          photoURL: currentUser.photoURL || '',
+          status: 'pending',
+          registeredAt: Timestamp.now(),
+        });
       });
 
-      const eventRef = doc(db, "events", eventId);
-      await updateDoc(eventRef, {
-        registered: increment(1),
-      });
+      // Jika transaksi berhasil, UI akan update via onSnapshot
+      setRegistrationStatus('pending');
 
-      setRegistrationStatus("pending");
     } catch (error) {
       console.error("Gagal mendaftar:", error);
+      // Menampilkan pesan error spesifik dari transaksi
+      alert(error.message || "Terjadi kesalahan saat mendaftar.");
     } finally {
       setIsRegistering(false);
     }
   };
 
-  const renderRegisterButton = () => {
-    const baseStyle =
-      "font-bold py-3 rounded-lg transition-all w-full text-center";
-    const statusMap = {
-      event_passed: [
-        "bg-gray-400 text-white cursor-not-allowed",
-        "Pendaftaran Ditutup",
-      ],
-      is_creator: [
-        "bg-gray-400 text-white cursor-not-allowed",
-        "Pembuat Event",
-      ],
-      pending: [
-        "bg-yellow-500 text-white cursor-not-allowed",
-        "Menunggu Persetujuan",
-      ],
-      approved: [
-        "bg-green-600 text-white cursor-not-allowed",
-        "Sudah Terdaftar",
-      ],
-      can_register: [
-        "bg-[#3e532d] text-white hover:bg-[#2f4123] shadow-md",
-        isRegistering ? "Memproses..." : "Daftar Sekarang",
-      ],
-    };
-
-    const [style, text] = statusMap[registrationStatus] || [
-      "bg-gray-300",
-      "Memuat status...",
-    ];
-    const isDisabled = registrationStatus !== "can_register";
-
-    return (
-      <button
-        onClick={handleRegister}
-        disabled={isDisabled || isRegistering}
-        className={`${baseStyle} ${style} disabled:opacity-70 disabled:cursor-not-allowed min-h-[3.5rem] flex items-center justify-center`}
-      >
-        <span>{text}</span>
-      </button>
-    );
+  const renderActionButton = () => {
+    switch (registrationStatus) {
+      case 'event_passed':
+        return <button disabled className="bg-gray-400 text-white font-bold py-3 px-12 rounded-lg cursor-not-allowed">Event Telah Berakhir</button>;
+      case 'is_creator':
+        return <button disabled className="bg-gray-400 text-white font-bold py-3 px-12 rounded-lg cursor-not-allowed">Anda Pembuat Event</button>;
+      case 'pending':
+        return <button disabled className="bg-yellow-500 text-white font-bold py-3 px-12 rounded-lg cursor-not-allowed">Menunggu Persetujuan</button>;
+      case 'approved':
+        return <button disabled className="bg-green-600 text-white font-bold py-3 px-12 rounded-lg cursor-not-allowed">Anda Sudah Terdaftar</button>;
+      case 'can_register':
+        if (eventOverallStatus === 'Pendaftaran Penuh') {
+            return <button disabled className="bg-orange-500 text-white font-bold py-3 px-12 rounded-lg cursor-not-allowed">Pendaftaran Penuh</button>;
+        }
+        return (
+          <button onClick={handleRegister} disabled={isRegistering || eventOverallStatus !== 'Pendaftaran Dibuka'} className="bg-[#f4d699] text-[#3e532d] font-bold py-3 px-12 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50">
+            {isRegistering ? 'Memproses...' : 'Register here!'}
+          </button>
+        );
+      default:
+        return <button disabled className="bg-gray-300 py-3 px-12 rounded-lg">Memuat status...</button>;
+    }
   };
 
   if (loading)
@@ -199,106 +239,43 @@ function EventDetailPage() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 md:py-12">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left Column - Event Details */}
-          <div className="lg:w-2/3">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
-              <h2 className="text-2xl font-bold text-[#3e532d] mb-6 pb-2 border-b border-[#3e532d]/20">
-                Detail Acara
-              </h2>
-              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+      <div className="bg-[#dde5d6] text-[#3e532d] p-8 md:p-12 lg:p-16">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+            
+            <div className="md:col-span-2">
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">{event.title}</h1>
+              <OverallStatusBadge status={eventOverallStatus} />
+              <h2 className="text-2xl font-bold mb-3 mt-4">About</h2>
+              <p className="text-base leading-relaxed whitespace-pre-line">
                 {event.description}
               </p>
             </div>
           </div>
 
-          {/* Right Column - Event Info & Registration */}
-          <div className="lg:w-1/3">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 sticky top-6">
-              <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-0.5 text-[#3e532d]">
-                    <FiMapPin size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-500 mb-1">
-                      Lokasi
-                    </h3>
-                    <p className="font-medium text-gray-800">
-                      {event.locationDetail}, {event.location}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-0.5 text-[#3e532d]">
-                    <FiClock size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-500 mb-1">
-                      Waktu
-                    </h3>
-                    <p className="font-medium text-gray-800">
-                      {eventDate}, {eventTime} WIB
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-0.5 text-[#3e532d]">
-                    <FiHome size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-500 mb-1">
-                      Penyelenggara
-                    </h3>
-                    <p className="font-medium text-gray-800">
-                      {event.organizer}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-0.5 text-[#3e532d]">
-                    <FiUsers size={20} />
-                  </div>
-                  <div className="w-full">
-                    <h3 className="text-sm font-semibold text-gray-500 mb-1">
-                      Kuota Peserta
-                    </h3>
-                    <p className="font-medium text-gray-800 mb-2">
-                      {event.registered}/{event.capacity} orang
-                    </p>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-[#3e532d] h-2 rounded-full"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            (event.registered / event.capacity) * 100
-                          )}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-gray-100">
-                  {renderRegisterButton()}
-                  <div className="mt-5 text-center">
-                    <Link
-                      to="/dashboard"
-                      className="inline-flex items-center text-[#3e532d] hover:text-[#2f4123] font-medium"
-                    >
-                      <FiArrowLeft className="mr-2" />
-                      Kembali ke Daftar Event
-                    </Link>
-                  </div>
-                </div>
+            <div className="md:col-span-1">
+              <div className="text-right mb-8">
+                <p className="font-semibold">Coming Soon!</p>
+                <p>{eventDate}</p>
+              </div>
+              <div className="border-l-2 border-[#3e532d]/50 pl-6 space-y-4">
+                <div className="flex items-start gap-3"><FiMapPin size={20} className="flex-shrink-0 mt-1"/><span>{event.locationDetail}, {event.location}</span></div>
+                <div className="flex items-start gap-3"><FiCalendar size={20} className="flex-shrink-0 mt-1"/><span>{eventDate}</span></div>
+                <div className="flex items-start gap-3"><FiClock size={20} className="flex-shrink-0 mt-1"/><span>{eventTime} WIB</span></div>
+                <div className="flex items-start gap-3"><FiHome size={20} className="flex-shrink-0 mt-1"/><span>{event.organizer}</span></div>
+                <div className="flex items-start gap-3"><FiUsers size={20} className="flex-shrink-0 mt-1"/><span>{event.registered}/{event.capacity} Peserta</span></div>
               </div>
             </div>
+          </div>
+
+          <div className="text-center mt-12">
+            {renderActionButton()}
+          </div>
+          
+          <div className="text-center mt-6">
+            <Link to="/dashboard" className="text-sm text-[#3e532d] hover:underline">
+              &#8592; Kembali ke Daftar Event
+            </Link>
           </div>
         </div>
       </div>

@@ -31,9 +31,11 @@ function CreateEventPage() {
     capacity: "",
   });
   const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(''); // State untuk pratinjau gambar
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Logika untuk mencegah memilih tanggal di masa lalu
   const now = new Date();
   const year = now.getFullYear();
   const month = (now.getMonth() + 1).toString().padStart(2, "0");
@@ -46,10 +48,8 @@ function CreateEventPage() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        setEventData((prev) => ({
-          ...prev,
-          organizer: currentUser.displayName || "",
-        }));
+        // Otomatis isi nama penyelenggara dari profil pengguna
+        setEventData(prev => ({ ...prev, organizer: currentUser.displayName || '' }));
       } else {
         navigate("/login");
       }
@@ -58,14 +58,15 @@ function CreateEventPage() {
   }, [navigate]);
 
   const handleChange = (e) => {
-    // Perbaikan kecil: Ambil name dan value dari e.target
     const { name, value } = e.target;
     setEventData((prevData) => ({ ...prevData, [name]: value }));
   };
 
   const handleImageChange = (e) => {
-    if (e.target.files[0]) {
-      setImageFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file)); // Buat URL pratinjau
     }
   };
 
@@ -86,6 +87,7 @@ function CreateEventPage() {
     setError("");
 
     try {
+      // 1. Unggah gambar ke Cloudinary
       const formData = new FormData();
       formData.append("file", imageFile);
       formData.append(
@@ -102,6 +104,7 @@ function CreateEventPage() {
       }
       const imageUrl = data.secure_url;
 
+      // 2. Siapkan objek event untuk Firestore
       const newEvent = {
         ...eventData,
         imageUrl: imageUrl,
@@ -109,13 +112,16 @@ function CreateEventPage() {
         dateTime: Timestamp.fromDate(new Date(eventData.dateTime)),
         creatorId: user.uid,
         registered: 0,
-        status: "pending",
+        status: 'pending',
+        completionStatus: 'awaiting_proof' // <-- PERBAIKAN PENTING
       };
 
+      // 3. Simpan event ke Firestore
       await addDoc(collection(db, "events"), newEvent);
 
       alert("Event berhasil dibuat dan sedang menunggu persetujuan admin.");
-      navigate("/my-event");
+      navigate("/dashboard"); // Arahkan ke halaman daftar event saya
+
     } catch (err) {
       console.error("Gagal membuat event:", err);
       setError(`Terjadi kesalahan saat menyimpan event: ${err.message}`);
@@ -125,59 +131,21 @@ function CreateEventPage() {
   };
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-no-repeat"
-      style={{
-        backgroundImage: `url(${bgEvents})`,
-      }}
-    >
-      <div className="container mx-auto p-8 max-w-2xl">
-        <h1 className="text-3xl font-bold mb-6">Buat Event Baru</h1>
-        <form
-          onSubmit={handleSubmit}
-          className="p-6 bg-white rounded-lg shadow-md space-y-4"
-        >
-          {/* --- FIELD FORM YANG HILANG SUDAH DIKEMBALIKAN --- */}
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Judul Event
-            </label>
-            <input
-              type="text"
-              name="title"
-              id="title"
-              value={eventData.title}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded-md"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="location"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Lokasi (Kota)
-            </label>
-            <select
-              name="location"
-              id="location"
-              value={eventData.location}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded-md bg-white"
-              required
-            >
-              {CITIES.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
-          </div>
+    <div className="container mx-auto p-8 max-w-2xl">
+      <h1 className="text-3xl font-bold mb-6">Buat Event Baru</h1>
+      <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-md space-y-4">
+        
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700">Judul Event</label>
+          <input type="text" name="title" id="title" value={eventData.title} onChange={handleChange} className="mt-1 block w-full p-2 border rounded-md" required />
+        </div>
+        
+        <div>
+          <label htmlFor="location" className="block text-sm font-medium text-gray-700">Lokasi (Kota)</label>
+          <select name="location" id="location" value={eventData.location} onChange={handleChange} className="mt-1 block w-full p-2 border rounded-md bg-white" required>
+            {CITIES.map(city => <option key={city} value={city}>{city}</option>)}
+          </select>
+        </div>
 
           <div>
             <label
@@ -235,64 +203,37 @@ function CreateEventPage() {
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="image"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Gambar Event
-            </label>
-            <input
-              type="file"
-              name="image"
-              id="image"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
-              required
-            />
-          </div>
-          {/* ---------------------------------------------------- */}
+        <div>
+          <label htmlFor="image" className="block text-sm font-medium text-gray-700">Gambar Event</label>
+          <input type="file" name="image" id="image" accept="image/*" onChange={handleImageChange} className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" required />
+          {imagePreview && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-700">Pratinjau:</p>
+              <img src={imagePreview} alt="Pratinjau event" className="mt-2 rounded-md h-40 w-auto object-cover border" />
+            </div>
+          )}
+        </div>
 
-          <div>
-            <label
-              htmlFor="dateTime"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Tanggal & Waktu
-            </label>
-            <input
-              type="datetime-local"
-              name="dateTime"
-              id="dateTime"
-              value={eventData.dateTime}
-              onChange={handleChange}
-              min={minDateTime}
-              className="mt-1 block w-full p-2 border rounded-md"
-              required
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="capacity"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Kapasitas Peserta
-            </label>
-            <input
-              type="number"
-              name="capacity"
-              id="capacity"
-              min="1"
-              value={eventData.capacity}
-              onChange={handleChange}
-              className="mt-1 block w-full p-2 border rounded-md"
-              required
-            />
-          </div>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+        <div>
+          <label htmlFor="dateTime" className="block text-sm font-medium text-gray-700">Tanggal & Waktu</label>
+          <input 
+            type="datetime-local" 
+            name="dateTime" 
+            id="dateTime" 
+            value={eventData.dateTime} 
+            onChange={handleChange} 
+            min={minDateTime}
+            className="mt-1 block w-full p-2 border rounded-md" 
+            required 
+          />
+        </div>
+        
+        <div>
+          <label htmlFor="capacity" className="block text-sm font-medium text-gray-700">Kapasitas Peserta</label>
+          <input type="number" name="capacity" id="capacity" min="1" value={eventData.capacity} onChange={handleChange} className="mt-1 block w-full p-2 border rounded-md" required />
+        </div>
+        
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
           <button
             type="submit"

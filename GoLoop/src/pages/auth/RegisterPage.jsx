@@ -41,10 +41,11 @@ function RegisterPage() {
         location: '',
         role: 'user',
         createdAt: Timestamp.now(),
+        points: 0,
       });
       
       // Arahkan ke halaman utama setelah berhasil
-      navigate("/events");
+      navigate("/login");
 
     } catch (err) {
       if (err.code === 'auth/email-already-in-use') {
