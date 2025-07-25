@@ -100,7 +100,7 @@ function EventsPage() {
             <h1 className="text-4xl md:text-5xl font-bold text-[#3B5323] leading-tight">
               Ayo Bersihin <br /> Lingkungan Bersama!
             </h1>
-            <p className="text-gray-700 text-lg">
+            <p className="text-[#3B5323] text-lg">
               Yuk bersihin lingkungan bareng orang-orang yang peduli! <br />
               Satu langkah kecilmu bisa berdampak besar
             </p>
