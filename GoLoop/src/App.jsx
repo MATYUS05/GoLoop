@@ -11,6 +11,7 @@ import CreateEventPage from "./pages/user/CreateEventPage";
 import MyEventsPage from "./pages/user/MyEventsPage";
 import EventDetailPage from "./pages/user/EventDetailPage";
 import ManageParticipantsPage from "./pages/user/ManageParticipantsPage";
+import Leaderboard from "./pages/user/Leaderboard";
 import Profile from "./pages/user/Profile";
 import Admin from "./pages/admin/Admin";
 import Home1 from "./pages/user/Home1";
@@ -35,6 +36,10 @@ function App() {
           <Route
             path="/my-event/participants/:eventId"
             element={<ManageParticipantsPage />}
+          />
+          <Route
+            path="/leaderboard"
+            element={<Leaderboard />}
           />
           <Route path="/dashboard" element={<Events />} />
         </Route>

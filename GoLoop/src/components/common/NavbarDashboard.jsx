@@ -112,19 +112,27 @@ function NavbarDashboard() {
               Events
             </Link>
             <Link
-              to="/profile"
-              onClick={toggleSidebar}
-              className="block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
-            >
-              Profil
-            </Link>
-            <Link
               to="/my-event"
               onClick={toggleSidebar}
               className="block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
             >
               MyEvent
             </Link>
+            <Link
+              to="/leaderboard"
+              onClick={toggleSidebar}
+              className="block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
+            >
+              Leaderboard
+            </Link>
+            <Link
+              to="/profile"
+              onClick={toggleSidebar}
+              className="block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
+            >
+              Profil
+            </Link>
+            
             <button
               onClick={handleLogout}
               className="w-full text-left block py-2.5 px-4 rounded transition duration-200 hover:bg-[#52733E]"
