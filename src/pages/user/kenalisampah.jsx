@@ -6,7 +6,7 @@ import ilustrasi from "../../assets/img/kenali-sampah.png";
 // Tambahkan gambar kategori
 import imgOrganik from "../../assets/img/sampah/organik.png";
 import imgAnorganik from "../../assets/img/sampah/anorganik.png";
-import imgB3 from "../../assets/img/sampah/b3.png";
+import imgB3 from "../../assets/img/sampah/b3.png";``
 
 function KenaliSampah() {
   return (
