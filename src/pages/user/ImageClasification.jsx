@@ -13,70 +13,130 @@ import {
 // Data untuk informasi daur ulang diperbarui dengan warna background
 const wasteInfo = {
   cardboard: {
-    description: "Kardus adalah bahan yang mudah didaur ulang. Pastikan dalam keadaan kering dan tidak terkontaminasi minyak.",
+    description:
+      "Kardus adalah bahan yang mudah didaur ulang. Pastikan dalam keadaan kering dan tidak terkontaminasi minyak.",
     color: "bg-orange-500",
     bgColor: "bg-orange-50",
     icon: "📦",
     management: [
-        { title: "Reduce", tip: "Pilih produk dengan kemasan minimal atau tanpa kardus jika memungkinkan." },
-        { title: "Reuse", tip: "Gunakan kembali kotak kardus untuk penyimpanan atau pengiriman barang." },
-        { title: "Recycle", tip: "Lipat kardus agar ringkas dan setor ke bank sampah atau pemulung terdekat." },
-    ]
+      {
+        title: "Reduce",
+        tip: "Pilih produk dengan kemasan minimal atau tanpa kardus jika memungkinkan.",
+      },
+      {
+        title: "Reuse",
+        tip: "Gunakan kembali kotak kardus untuk penyimpanan atau pengiriman barang.",
+      },
+      {
+        title: "Recycle",
+        tip: "Lipat kardus agar ringkas dan setor ke bank sampah atau pemulung terdekat.",
+      },
+    ],
   },
   plastic: {
-    description: "Sampah plastik butuh ratusan tahun untuk terurai. Daur ulang sangat penting untuk mengurangi polusi.",
+    description:
+      "Sampah plastik butuh ratusan tahun untuk terurai. Daur ulang sangat penting untuk mengurangi polusi.",
     color: "bg-yellow-500", // Diubah menjadi kuning sesuai permintaan
     bgColor: "bg-yellow-50",
     icon: "🧴",
     management: [
-        { title: "Reduce", tip: "Bawa tas belanja dan botol minum sendiri untuk mengurangi sampah plastik." },
-        { title: "Reuse", tip: "Gunakan kembali wadah plastik bekas es krim atau makanan untuk menyimpan barang." },
-        { title: "Recycle", tip: "Bersihkan sisa makanan/minuman, lalu kumpulkan untuk didaur ulang." },
-    ]
+      {
+        title: "Reduce",
+        tip: "Bawa tas belanja dan botol minum sendiri untuk mengurangi sampah plastik.",
+      },
+      {
+        title: "Reuse",
+        tip: "Gunakan kembali wadah plastik bekas es krim atau makanan untuk menyimpan barang.",
+      },
+      {
+        title: "Recycle",
+        tip: "Bersihkan sisa makanan/minuman, lalu kumpulkan untuk didaur ulang.",
+      },
+    ],
   },
   paper: {
-    description: "Kertas berasal dari pohon. Daur ulang kertas membantu menyelamatkan hutan dan menghemat energi.",
+    description:
+      "Kertas berasal dari pohon. Daur ulang kertas membantu menyelamatkan hutan dan menghemat energi.",
     color: "bg-slate-500",
     bgColor: "bg-slate-50",
     icon: "📄",
     management: [
-        { title: "Reduce", tip: "Kurangi mencetak dokumen yang tidak perlu. Gunakan format digital." },
-        { title: "Reuse", tip: "Gunakan sisi kertas yang masih kosong untuk catatan atau kertas buram." },
-        { title: "Recycle", tip: "Pastikan kertas tidak basah atau berminyak sebelum disetor ke bank sampah." },
-    ]
+      {
+        title: "Reduce",
+        tip: "Kurangi mencetak dokumen yang tidak perlu. Gunakan format digital.",
+      },
+      {
+        title: "Reuse",
+        tip: "Gunakan sisi kertas yang masih kosong untuk catatan atau kertas buram.",
+      },
+      {
+        title: "Recycle",
+        tip: "Pastikan kertas tidak basah atau berminyak sebelum disetor ke bank sampah.",
+      },
+    ],
   },
   metal: {
-    description: "Logam seperti kaleng aluminium dan baja dapat didaur ulang berulang kali tanpa kehilangan kualitasnya.",
+    description:
+      "Logam seperti kaleng aluminium dan baja dapat didaur ulang berulang kali tanpa kehilangan kualitasnya.",
     color: "bg-indigo-500",
     bgColor: "bg-indigo-50",
     icon: "🔩",
     management: [
-        { title: "Reduce", tip: "Pilih produk dalam kemasan yang lebih besar untuk mengurangi jumlah kaleng." },
-        { title: "Reuse", tip: "Gunakan kaleng bekas sebagai pot tanaman kecil atau tempat pensil." },
-        { title: "Recycle", tip: "Bersihkan kaleng dari sisa isi, lalu pipihkan jika memungkinkan untuk menghemat ruang." },
-    ]
+      {
+        title: "Reduce",
+        tip: "Pilih produk dalam kemasan yang lebih besar untuk mengurangi jumlah kaleng.",
+      },
+      {
+        title: "Reuse",
+        tip: "Gunakan kaleng bekas sebagai pot tanaman kecil atau tempat pensil.",
+      },
+      {
+        title: "Recycle",
+        tip: "Bersihkan kaleng dari sisa isi, lalu pipihkan jika memungkinkan untuk menghemat ruang.",
+      },
+    ],
   },
   glass: {
-    description: "Kaca dapat didaur ulang 100% tanpa henti. Memisahkan warna kaca akan sangat membantu proses daur ulang.",
+    description:
+      "Kaca dapat didaur ulang 100% tanpa henti. Memisahkan warna kaca akan sangat membantu proses daur ulang.",
     color: "bg-green-500",
     bgColor: "bg-green-50",
     icon: "�",
     management: [
-        { title: "Reduce", tip: "Beli produk isi ulang (refill) untuk mengurangi jumlah botol kaca baru." },
-        { title: "Reuse", tip: "Gunakan kembali botol atau toples kaca untuk menyimpan bumbu, selai, atau minuman." },
-        { title: "Recycle", tip: "Kumpulkan wadah kaca. Pisahkan berdasarkan warna (bening, hijau, coklat) jika bisa." },
-    ]
+      {
+        title: "Reduce",
+        tip: "Beli produk isi ulang (refill) untuk mengurangi jumlah botol kaca baru.",
+      },
+      {
+        title: "Reuse",
+        tip: "Gunakan kembali botol atau toples kaca untuk menyimpan bumbu, selai, atau minuman.",
+      },
+      {
+        title: "Recycle",
+        tip: "Kumpulkan wadah kaca. Pisahkan berdasarkan warna (bening, hijau, coklat) jika bisa.",
+      },
+    ],
   },
   trash: {
-    description: "Ini adalah sampah sisa (residu) yang saat ini sulit atau tidak bisa didaur ulang.",
+    description:
+      "Ini adalah sampah sisa (residu) yang saat ini sulit atau tidak bisa didaur ulang.",
     color: "bg-red-500",
     bgColor: "bg-red-50",
     icon: "🗑️",
     management: [
-        { title: "Reduce", tip: "Hindari produk dengan kemasan berlapis atau yang tidak dapat didaur ulang." },
-        { title: "Replace", tip: "Ganti produk sekali pakai dengan alternatif yang bisa digunakan berulang kali." },
-        { title: "Dispose", tip: "Buang ke tempat sampah yang benar untuk diangkut ke Tempat Pembuangan Akhir (TPA)." },
-    ]
+      {
+        title: "Reduce",
+        tip: "Hindari produk dengan kemasan berlapis atau yang tidak dapat didaur ulang.",
+      },
+      {
+        title: "Replace",
+        tip: "Ganti produk sekali pakai dengan alternatif yang bisa digunakan berulang kali.",
+      },
+      {
+        title: "Dispose",
+        tip: "Buang ke tempat sampah yang benar untuk diangkut ke Tempat Pembuangan Akhir (TPA).",
+      },
+    ],
   },
 };
 
@@ -114,9 +174,8 @@ function ImageClassifier() {
     setError(null);
 
     try {
-      const response = await axios.post(API_URL, selectedFile, {
+      const response = await axios.post("/api/classify", selectedFile, {
         headers: {
-          Authorization: `Bearer ${HF_API_KEY}`,
           "Content-Type": selectedFile.type,
         },
       });
@@ -126,10 +185,8 @@ function ImageClassifier() {
       );
       setPrediction(topPrediction);
     } catch (err) {
-      console.error("Error calling Hugging Face API:", err);
-      setError(
-        "Gagal melakukan prediksi. Model mungkin sedang dimuat, coba beberapa saat lagi."
-      );
+      console.error("Error calling classify API:", err);
+      setError("Gagal melakukan prediksi. Coba lagi nanti.");
     } finally {
       setIsLoading(false);
     }
@@ -179,7 +236,11 @@ function ImageClassifier() {
           disabled={isLoading}
           className="flex items-center justify-center bg-[#2C441E] text-white font-bold py-2.5 px-6 rounded-lg hover:bg-[#8D964D] transition disabled:bg-gray-400 shadow-md"
         >
-          {isLoading ? <FiLoader className="animate-spin mr-2" /> : <FiCamera className="mr-2" />}
+          {isLoading ? (
+            <FiLoader className="animate-spin mr-2" />
+          ) : (
+            <FiCamera className="mr-2" />
+          )}
           {isLoading ? "Menganalisis..." : "Klasifikasi"}
         </button>
         <button
@@ -209,31 +270,39 @@ function ImageClassifier() {
               wasteInfo[prediction.label]?.color || "bg-gray-500"
             }`}
           >
-            <span className="text-4xl">{wasteInfo[prediction.label]?.icon || "❓"}</span>
+            <span className="text-4xl">
+              {wasteInfo[prediction.label]?.icon || "❓"}
+            </span>
             <div>
               <p className="text-sm opacity-80">Terdeteksi Sebagai</p>
               <h3 className="text-2xl font-bold">
-                {prediction.label.charAt(0).toUpperCase() + prediction.label.slice(1)}
+                {prediction.label.charAt(0).toUpperCase() +
+                  prediction.label.slice(1)}
               </h3>
             </div>
             <div className="ml-auto text-right">
               <p className="text-sm opacity-80">Keyakinan</p>
-              <p className="text-2xl font-bold">{(prediction.score * 100).toFixed(1)}%</p>
+              <p className="text-2xl font-bold">
+                {(prediction.score * 100).toFixed(1)}%
+              </p>
             </div>
           </div>
-          <div className={`p-4 rounded-lg border flex-grow space-y-3 transition-colors duration-500 ${wasteInfo[prediction.label]?.bgColor || "bg-white"}`}>
+          <div
+            className={`p-4 rounded-lg border flex-grow space-y-3 transition-colors duration-500 ${
+              wasteInfo[prediction.label]?.bgColor || "bg-white"
+            }`}
+          >
             <p className="text-gray-600 text-sm pb-3 border-b">
-                {wasteInfo[prediction.label]?.description || "Informasi tidak tersedia."}
+              {wasteInfo[prediction.label]?.description ||
+                "Informasi tidak tersedia."}
             </p>
             <div className="space-y-2 pt-2">
-                {(wasteInfo[prediction.label]?.management || []).map(item => (
-                    <div key={item.title}>
-                        <h4 className="font-bold text-gray-800">{item.title}</h4>
-                        <p className="text-gray-600 text-sm">
-                            {item.tip}
-                        </p>
-                    </div>
-                ))}
+              {(wasteInfo[prediction.label]?.management || []).map((item) => (
+                <div key={item.title}>
+                  <h4 className="font-bold text-gray-800">{item.title}</h4>
+                  <p className="text-gray-600 text-sm">{item.tip}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -249,14 +318,18 @@ function ImageClassifier() {
   );
 
   return (
-    <div className={`bg-gray-100 min-h-screen flex items-center justify-center p-4 font-sans transition-colors duration-500`}>
+    <div
+      className={`bg-gray-100 min-h-screen flex items-center justify-center p-4 font-sans transition-colors duration-500`}
+    >
       <div
         className={`w-full bg-white rounded-2xl shadow-2xl p-8 space-y-6 transition-all duration-500 ease-in-out ${
-          prediction ? 'max-w-4xl' : 'max-w-md'
+          prediction ? "max-w-4xl" : "max-w-md"
         }`}
       >
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-800">Klasifikasi Sampah</h1>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Klasifikasi Sampah
+          </h1>
           <p className="text-gray-500 mt-1">
             Unggah gambar sampahmu untuk mengetahui jenisnya!
           </p>
