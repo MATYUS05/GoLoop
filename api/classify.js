@@ -1,7 +1,6 @@
 import axios from "axios";
 import { Buffer } from "buffer";
 
-
 export const config = {
     api: {
         bodyParser: false, // we forward raw binary

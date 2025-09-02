@@ -18,7 +18,6 @@ import Home1 from "./pages/user/Home1";
 import KenaliSampah from "./pages/user/kenalisampah";
 import ModelLearning from "./pages/user/ImageClasification";
 
-
 function App() {
   return (
     <Router>
