@@ -15,9 +15,11 @@ import Leaderboard from "./pages/user/Leaderboard";
 import Profile from "./pages/user/Profile";
 import Admin from "./pages/admin/Admin";
 import Home1 from "./pages/user/Home1";
-import KenaliSampah from "./pages/user/KenaliSampah"
+import KenaliSampah from "./pages/user/KenaliSampah";
 import EventCreatedSuccess from "./pages/user/EventCreatedSuccess";
 
+// 🔹 import halaman klasifikasi
+import ImageClasification from "./pages/user/ImageClasification";
 
 function App() {
   return (
@@ -40,12 +42,12 @@ function App() {
             path="/my-event/participants/:eventId"
             element={<ManageParticipantsPage />}
           />
-          <Route
-            path="/leaderboard"
-            element={<Leaderboard />}
-          />
+          <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/dashboard" element={<Events />} />
           <Route path="/kenali-sampah" element={<KenaliSampah />} />
+
+          {/* 🔹 route baru untuk klasifikasi */}
+          <Route path="/klasifikasi" element={<ImageClasification />} />
         </Route>
 
         {/* Admin Dashboard */}
